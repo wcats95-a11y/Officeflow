@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 type Status = "To Do" | "In Progress" | "Under Review" | "Done";
 type Priority = "Urgent" | "High" | "Medium" | "Low";
-type Task = { id: string; title: string; description: string; status: Status; priority: Priority; category: string; due: string; project: string; client: string; juniors: string[] };
+type Task = { id: string; title: string; description: string; status: Status; priority: Priority; category: string; due: string; project: string; client: string; juniors: string[]; financialYear?: string; assessmentYear?: string; taskType?: string; preparer?: string; reviewer?: string; notes?: string };
 const seed: Task[] = [
  {id:"t1",title:"Review Q2 GST reconciliation",description:"Check purchase register against GSTR-2B and note exceptions.",status:"In Progress",priority:"Urgent",category:"Tax",due:"2026-10-29",project:"Quarterly compliance",client:"Aster Retail",juniors:["Ruchita","Sapna"]},
  {id:"t2",title:"Prepare client document checklist",description:"Collect missing bank and interest certificates.",status:"To Do",priority:"High",category:"Client follow-up",due:"2026-10-30",project:"ITR filing",client:"Northstar Foods",juniors:["Jahnavi"]},
@@ -24,12 +24,15 @@ export default function Home() {
  const [filter,setFilter] = useState("All tasks");
  const [showAdd,setShowAdd] = useState(false);
  const [editingId,setEditingId] = useState<string|null>(null);
+ const [juniorDirectory,setJuniorDirectory] = useState<Record<string,string>>({});
  const [dark,setDark] = useState(false);
  const [toast,setToast] = useState("");
  const [form,setForm] = useState({title:"",description:"",priority:"Medium" as Priority,due:localDate(),category:"General",project:"",client:"",juniors:""});
- useEffect(()=>{try{const saved=localStorage.getItem("officeflow-tasks");if(saved)setTasks(JSON.parse(saved));setDark(localStorage.getItem("officeflow-dark")==="true");}catch{}setReady(true)},[]);
+ useEffect(()=>{try{const saved=localStorage.getItem("officeflow-tasks");if(saved)setTasks(JSON.parse(saved));setDark(localStorage.getItem("officeflow-dark")==="true");const savedDirectory=localStorage.getItem("officeflow-juniors");if(savedDirectory)setJuniorDirectory(JSON.parse(savedDirectory));}catch{}setReady(true)},[]);
  useEffect(()=>{if(ready)localStorage.setItem("officeflow-tasks",JSON.stringify(tasks))},[tasks,ready]);
  useEffect(()=>{if(ready)localStorage.setItem("officeflow-dark",String(dark))},[dark,ready]);
+ useEffect(()=>{if(ready)localStorage.setItem("officeflow-juniors",JSON.stringify(juniorDirectory))},[juniorDirectory,ready]);
+ useEffect(()=>{const handler=(e:KeyboardEvent)=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();document.querySelector<HTMLInputElement>('[aria-label="Search"]')?.focus()}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="n"){e.preventDefault();setEditingId(null);setShowAdd(true)}};window.addEventListener("keydown",handler);return()=>window.removeEventListener("keydown",handler)},[]);
  const filtered = useMemo(()=>tasks.filter(t=>{
   const q=query.toLowerCase();
   const matches=[t.title,t.description,t.client,t.project,t.category,...t.juniors].join(" ").toLowerCase().includes(q);
