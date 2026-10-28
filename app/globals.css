@@ -183,3 +183,5 @@ button:active{transform:translateY(0)}
 .workload-metrics small{font-size:9px;color:var(--muted);line-height:1.2}
 .workload-card p{font-size:11px;color:var(--muted);margin:0}
 @media(max-width:760px){.manager-alerts{grid-template-columns:1fr}.cloud-indicator{display:none}.auth-card{padding:22px}.workload-metrics b{font-size:16px}}
+
+.workload-warning{display:inline-flex;align-self:flex-start;padding:6px 8px;border-radius:7px;background:#fff1e8;color:#a34712;font-size:10px;font-weight:800}
