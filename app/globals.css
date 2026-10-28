@@ -120,3 +120,6 @@ button:active{transform:translateY(0)}
 .whatsapp-action span:first-child{font-size:14px}
 .row-menu{gap:6px;align-items:center}
 @media(max-width:560px){.whatsapp-action{min-height:32px;padding:0 7px;font-size:10px}.row-menu{gap:4px}}
+
+.delete-task-button{color:#a45b65}
+.delete-task-button:hover{color:#b42332;background:#fff0f1;border-color:#f1c2c6}
