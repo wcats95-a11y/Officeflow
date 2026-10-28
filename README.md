@@ -18,3 +18,6 @@ OfficeFlow is a responsive task and delegation workspace built with Next.js, Typ
 
 ## Important limitations
 This first UI release stores data in the current browser only. It does not yet include Google sign-in, Supabase database sync, cross-device sharing, offline conflict resolution, scheduled reminders, or WhatsApp delivery tracking. WhatsApp opens a prefilled draft for the user to review and send manually. Do not enter confidential client documents or sensitive data into this prototype.
+
+
+Deployment note: Vercel project framework is configured for Next.js.
