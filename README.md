@@ -14,6 +14,7 @@ OfficeFlow is a responsive task and delegation workspace tailored toward CA offi
 - Light/dark theme
 - Settings page with junior phone directory and JSON backup export/restore
 - Browser-local persistence and India-local date calculation
+- Supabase project configured with secure browser client and owner-scoped task repository (cloud sync activation awaits the final sign-in phase)
 
 ## Run locally
 - Install Node.js 20+
@@ -22,6 +23,6 @@ OfficeFlow is a responsive task and delegation workspace tailored toward CA offi
 - Open http://localhost:3000
 
 ## Important limitations
-This is still a single-browser prototype. Data is stored in the browser's localStorage, not in a shared database. There is no Google sign-in, Supabase sync, server-side authorisation, cross-device sharing, scheduled reminders, official WhatsApp Business Platform integration, or WhatsApp delivery/read/reply tracking. Browser storage may be cleared or evicted; export a backup regularly. Do not enter confidential client documents, PANs, Aadhaar numbers, bank details or sensitive tax workpapers.
+This is still a single-browser prototype. Data is stored in the browser's localStorage, not in a shared database. Google sign-in is intentionally deferred. The dedicated Supabase database and secure load/save helpers are prepared, but app-level cloud sync and cross-device sharing remain disabled until authentication and the sync/import experience are completed. There are no scheduled reminders, official WhatsApp Business Platform integration, or WhatsApp delivery/read/reply tracking. Browser storage may be cleared or evicted; export a backup regularly. Do not enter confidential client documents, PANs, Aadhaar numbers, bank details or sensitive tax workpapers.
 
 The manager dashboard counts are derived from tasks currently stored in this browser. They are not a substitute for an independently maintained statutory deadline register. Verify statutory dates against authoritative sources and maintain a separate reliable deadline control until reminders and cloud persistence are implemented and tested.
