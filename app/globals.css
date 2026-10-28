@@ -23,3 +23,94 @@
 
 
 .live-datetime{display:flex;align-items:center;gap:8px;white-space:nowrap;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.live-datetime small{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--purple);padding:4px 5px;border-radius:5px;background:var(--surface)}.clock-dot{width:7px;height:7px;border-radius:50%;background:#28b887;box-shadow:0 0 0 3px rgba(40,184,135,.12);flex:none}@media(max-width:1050px){.live-datetime{display:none}}
+
+
+/* OfficeFlow visual polish pass — readable density and responsive navigation */
+:root{--text-small:12px}
+body{font-size:14px;-webkit-font-smoothing:antialiased}
+.content{padding-top:30px;padding-bottom:28px}
+h1{font-size:30px;line-height:1.2;letter-spacing:-.8px}
+.subtitle{font-size:13px;line-height:1.6}
+.nav-item{font-size:13px;min-height:40px}
+.nav-label{font-size:10px}
+.topbar{min-height:72px}
+.searchbox{min-height:40px}
+.live-datetime{font-size:12px}
+.task-table-head{font-size:10px;letter-spacing:.7px}
+.task-row{min-height:78px;font-size:12px}
+.task-name-wrap b{font-size:13px;line-height:1.4}
+.task-name-wrap small{font-size:11px;line-height:1.4}
+.priority-pill{font-size:10px;padding:6px 8px}
+.status-select{font-size:11px;padding:7px 8px}
+.due-date{font-size:12px}
+.assignee-names{font-size:11px}
+.entity-card h3{font-size:15px}
+.entity-card p{font-size:12px;line-height:1.55}
+.directory-form label{font-size:13px}
+.directory-row b{font-size:14px}
+.directory-row small{font-size:12px}
+.empty-state{padding:52px 22px}
+.empty-state b{font-size:15px}
+.empty-state p{font-size:12px;line-height:1.6}
+.primary-button,.secondary-button{font-size:12px;min-height:40px}
+button,input,select,textarea{transition:border-color .16s ease,background-color .16s ease,box-shadow .16s ease}
+button:active{transform:translateY(0)}
+.task-row:hover{background:color-mix(in srgb,var(--purple-soft) 22%,var(--surface))}
+.entity-card,.stat-card,.task-panel{box-shadow:0 3px 14px rgba(34,31,76,.035)}
+.live-datetime{display:flex!important}
+@media(max-width:1050px){.live-datetime{display:flex!important;font-size:10px;gap:5px}.live-datetime span:not(.clock-dot){max-width:128px;overflow:hidden;text-overflow:ellipsis}.top-actions{gap:10px}}
+@media(max-width:850px){
+ .sidebar{position:fixed;z-index:20;left:0;right:0;bottom:0;width:100%;height:auto;min-height:0;padding:6px 8px calc(6px + env(safe-area-inset-bottom));border-right:0;border-top:1px solid var(--line);background:var(--surface);box-shadow:0 -6px 24px rgba(25,25,55,.08);display:block}
+ .brand,.workspace,.sidebar>.nav-label,.sidebar-bottom{display:none!important}
+ .sidebar nav{display:flex;align-items:stretch;gap:4px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
+ .sidebar nav::-webkit-scrollbar{display:none}
+ .sidebar nav .nav-item{display:flex;flex:1 0 68px;flex-direction:column;justify-content:center;gap:3px;min-width:0;min-height:52px;padding:5px 3px;margin:0;font-size:10px;white-space:nowrap;text-align:center}
+ .sidebar nav .nav-icon{font-size:17px;width:auto;line-height:1.2}
+ .sidebar nav .nav-count{display:none}
+ .sidebar nav .nav-item.active{font-size:10px}
+ .sidebar>.nav-item{display:none}
+ .main-area{padding-bottom:78px}
+ .content{padding:24px 20px}
+ .topbar{padding:0 20px}
+ .task-table-head{display:none}
+ .task-row{grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;padding:14px 15px;min-height:0}
+ .task-row>div:nth-child(1){grid-column:1;grid-row:1}
+ .task-row>div:nth-child(2){grid-column:2;grid-row:1;justify-self:end}
+ .task-row>div:nth-child(3){grid-column:1;grid-row:2;justify-self:start}
+ .task-row>div:nth-child(4){display:flex;grid-column:2;grid-row:2;justify-self:end;align-items:center}
+ .task-row>div:nth-child(5){display:flex;grid-column:1;grid-row:3;min-width:0;align-items:center}
+ .task-row>div:nth-child(6){grid-column:2;grid-row:3;align-self:center}
+ .assignee-names{display:block}
+ .task-name-wrap b{white-space:normal}
+}
+@media(max-width:560px){
+ .content{padding:20px 13px}
+ .topbar{height:auto;min-height:62px;padding:10px 13px;gap:8px}
+ .top-actions{gap:6px}
+ .live-datetime{font-size:9px;gap:4px}
+ .live-datetime span:not(.clock-dot){max-width:94px}
+ .live-datetime small{font-size:8px;padding:3px}
+ .searchbox{width:min(36vw,145px);min-width:105px;padding:7px 8px}
+ .searchbox kbd{display:none}
+ .top-actions>.avatar{display:none}
+ .content{padding-top:19px}
+ .welcome-row{align-items:center;gap:10px}
+ .welcome-row h1{font-size:24px}
+ .eyebrow{font-size:9px;letter-spacing:.7px}
+ .subtitle{font-size:12px}
+ .stats-grid{gap:9px}
+ .stat-card{padding:13px}
+ .stat-top{font-size:11px}
+ .stat-value{font-size:24px}
+ .stat-bottom{font-size:10px}
+ .task-row{padding:13px 11px;gap:9px}
+ .task-name-wrap b{font-size:13px}
+ .task-name-wrap small{font-size:11px}
+ .priority-pill{font-size:9px}
+ .status-select{font-size:10px;max-width:160px}
+ .due-date{font-size:11px}
+ .directory-layout{grid-template-columns:minmax(0,1fr)}
+ .directory-form input,.directory-form select,.directory-row input{min-height:42px}
+ .modal-backdrop{padding:10px}
+ .modal{max-height:calc(100dvh - 20px);overflow-y:auto}
+}
