@@ -12,7 +12,8 @@
     "next": "16.4.3",
     "react": "19.2.9",
     "react-dom": "19.2.9",
-    "@supabase/supabase-js": "2.89.0"
+    "@supabase/supabase-js": "2.89.0",
+    "pdfjs-dist": "4.10.38"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
