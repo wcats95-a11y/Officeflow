@@ -25,12 +25,14 @@ export default function Home() {
  const [newJunior,setNewJunior] = useState({name:"",phone:""});
  const [dark,setDark] = useState(false);
  const [toast,setToast] = useState("");
+ const [currentDateTime,setCurrentDateTime] = useState("");
  const [form,setForm] = useState({title:"",description:"",priority:"Medium" as Priority,due:localDate(),category:"General",project:"",client:"",juniors:"",financialYear:"2025-26",assessmentYear:"2026-27",taskType:"Income tax",preparer:"",reviewer:"",notes:""});
  useEffect(()=>{try{const saved=localStorage.getItem("officeflow-tasks");if(saved){const parsed=JSON.parse(saved) as Task[];const demoIds=new Set(["t1","t2","t3","t4"]);const demoTitles=new Set(["Review Q2 GST reconciliation","Prepare client document checklist","Finalize audit observations","Send signed computation"]);setTasks(parsed.filter(t=>!demoIds.has(t.id)&&!demoTitles.has(t.title)).map(t=>({ ...t, client:["Aster Retail","Northstar Foods"].includes(t.client)? "":t.client })));}else{setTasks([]);}setDark(localStorage.getItem("officeflow-dark")==="true");const savedDirectory=localStorage.getItem("officeflow-juniors");if(savedDirectory)setJuniorDirectory(JSON.parse(savedDirectory));const savedClients=localStorage.getItem("officeflow-clients");if(savedClients)setClientDirectory(JSON.parse(savedClients));}catch{}setReady(true)},[]);
  useEffect(()=>{if(ready)localStorage.setItem("officeflow-tasks",JSON.stringify(tasks))},[tasks,ready]);
  useEffect(()=>{if(ready)localStorage.setItem("officeflow-dark",String(dark))},[dark,ready]);
  useEffect(()=>{if(ready)localStorage.setItem("officeflow-juniors",JSON.stringify(juniorDirectory))},[juniorDirectory,ready]);
  useEffect(()=>{if(ready)localStorage.setItem("officeflow-clients",JSON.stringify(clientDirectory))},[clientDirectory,ready]);
+ useEffect(()=>{const updateClock=()=>setCurrentDateTime(new Date().toLocaleString("en-IN",{timeZone:"Asia/Kolkata",dateStyle:"medium",timeStyle:"medium"}));updateClock();const timer=window.setInterval(updateClock,1000);return()=>window.clearInterval(timer)},[]);
  useEffect(()=>{const handler=(e:KeyboardEvent)=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();document.querySelector<HTMLInputElement>('[aria-label="Search"]')?.focus()}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="n"){e.preventDefault();setEditingId(null);setShowAdd(true)}};window.addEventListener("keydown",handler);return()=>window.removeEventListener("keydown",handler)},[]);
  const filtered = useMemo(()=>tasks.filter(t=>{
   const q=query.toLowerCase();
@@ -58,7 +60,7 @@ export default function Home() {
    <div className="sidebar-bottom"><div className="help-card"><div className="help-symbol">✳</div><b>Make work flow.</b><p>A little clarity goes a long way.</p></div><div className="profile"><div className="avatar owner">CR</div><div><b>Charan Reddy</b><small>Workspace owner</small></div><button title="Toggle theme" className="icon-button" onClick={()=>setDark(!dark)}>{dark?"☼":"◐"}</button></div></div>
   </aside>
   <section className="main-area">
-   <header className="topbar"><div className="crumb">Workspace <span>/</span> <b>{view}</b></div><div className="top-actions"><div className="searchbox"><span>⌕</span><input aria-label="Search" placeholder="Search anything..." value={query} onChange={e=>setQuery(e.target.value)}/><kbd>⌘ K</kbd></div><button className="icon-button notification" title="Notifications">♧<i/></button><div className="avatar owner">CR</div></div></header>
+   <header className="topbar"><div className="crumb">Workspace <span>/</span> <b>{view}</b></div><div className="top-actions"><div className="live-datetime" aria-label="Current date and time"><span className="clock-dot"/> <span>{currentDateTime||"India time"}</span><small>IST</small></div><div className="searchbox"><span>⌕</span><input aria-label="Search" placeholder="Search anything..." value={query} onChange={e=>setQuery(e.target.value)}/><kbd>⌘ K</kbd></div><button className="icon-button notification" title="Notifications">♧<i/></button><div className="avatar owner">CR</div></div></header>
    <div className="content">
     <div className="welcome-row"><div><div className="eyebrow"><span className="eyebrow-dot"/> YOUR WORKSPACE · WEDNESDAY, OCTOBER 28</div><h1>{view==="Today"?"Good evening, Charan":view}<span className="wave">{view==="Today"?" ✦":""}</span></h1><p className="subtitle">{view==="Today"?"A clear mind starts with a clear plan. Here's your day at a glance.":`Your ${view.toLowerCase()} in one calm, organized place.`}</p></div><button className="primary-button" onClick={()=>setShowAdd(true)}><span>＋</span> New task</button></div>
     {view==="Today"&&(
