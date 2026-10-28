@@ -20,3 +20,6 @@
 .directory-row input{max-width:260px;margin-top:5px}
 .inline-add-button{display:inline-flex;align-items:center;align-self:flex-start;margin-top:6px;padding:4px 0;border:0;background:transparent;color:var(--purple);font-size:11px;font-weight:700;cursor:pointer}
 @media(max-width:760px){.directory-layout{grid-template-columns:1fr;gap:12px}.directory-row input{max-width:100%}}
+
+
+.live-datetime{display:flex;align-items:center;gap:8px;white-space:nowrap;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.live-datetime small{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--purple);padding:4px 5px;border-radius:5px;background:var(--surface)}.clock-dot{width:7px;height:7px;border-radius:50%;background:#28b887;box-shadow:0 0 0 3px rgba(40,184,135,.12);flex:none}@media(max-width:1050px){.live-datetime{display:none}}
