@@ -86,7 +86,7 @@ async function handleAuth(e:React.FormEvent){e.preventDefault();if(!supabase){se
    <div className="brand"><div className="brand-mark">o</div><span>office<span className="brand-light">flow</span></span></div>
    <div className="workspace"><div className="workspace-icon">C</div><div><b>My workspace</b><small>Personal office</small></div><span className="chevron">⌄</span></div>
    <p className="nav-label">WORKSPACE</p>
-   <nav>{[["Today","◷"],["My tasks","☷"],["My Review","✓"],["Team workload","♙"],["Follow-ups","↗"],["Reports","▤"],["Kanban board","▦"],["Calendar","▦"],["Projects","▤"],["Clients","♧"],["Juniors","♧"],["Settings","⚙"]].map(([name,icon])=><button key={name} className={view===name?"nav-item active":"nav-item"} onClick={()=>setView(name)}><span className="nav-icon">{icon}</span>{name}{name==="Today"&&<span className="nav-count">{counts.open}</span>}</button>)}</nav>
+   <nav>{[["Today","◷"],["My tasks","☷"],["My Review","✓"],["Clients","♧"],["Juniors","♙"],["Settings","⚙"]].map(([name,icon])=><button key={name} className={view===name?"nav-item active":"nav-item"} onClick={()=>setView(name)}><span className="nav-icon">{icon}</span>{name}{name==="Today"&&<span className="nav-count">{counts.open}</span>}</button>)}</nav>
    
    <div className="sidebar-bottom"><div className="help-card"><div className="help-symbol">✳</div><b>Make work flow.</b><p>A little clarity goes a long way.</p></div><div className="profile"><div className="avatar owner">CR</div><div><b>Charan Reddy</b><small>Workspace owner</small></div><button title="Toggle theme" className="icon-button" onClick={()=>setDark(!dark)}>{dark?"☼":"◐"}</button></div></div>
   </aside>
