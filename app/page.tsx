@@ -82,8 +82,9 @@ export default function Home() {
  useEffect(()=>{
   if(!supabase){setAuthReady(true);setCloudStatus("Saved on this device");return}
   let alive=true;
-  supabase.auth.getSession().then(({data})=>{if(alive){setSession(data.session);setAuthReady(true);setCloudStatus(data.session?"Connecting secure workspace…":"Sign in required")}}).catch(()=>{if(alive){setAuthReady(true);setCloudStatus("Cloud connection unavailable")}});
-  const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,nextSession)=>{if(alive){const nextId=nextSession?.user?.id||null;if(sessionUserId.current!==nextId){sessionUserId.current=nextId;setCloudHydrated(false);setCloudReady(false);setCloudStatus(nextId?"Loading secure workspace…":"Sign in required");}setSession(nextSession);}});
+  // Supabase emits INITIAL_SESSION after restoring the persisted browser session.
+  // Use the auth event as the single source of truth to avoid a getSession/listener race on refresh.
+  const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,nextSession)=>{if(!alive)return;const nextId=nextSession?.user?.id||null;if(sessionUserId.current!==nextId){sessionUserId.current=nextId;setCloudHydrated(false);setCloudReady(false);setCloudStatus(nextId?"Loading secure workspace…":"Sign in required");}setSession(nextSession);setAuthReady(true);});
   return ()=>{alive=false;subscription.unsubscribe()};
  },[]);
  useEffect(()=>{
