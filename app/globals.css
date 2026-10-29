@@ -304,3 +304,7 @@ input:focus,select:focus,textarea:focus{border-color:#8e85f3!important;box-shado
 .task-event-chip{background:#efedff;color:#5045bd}
 .official-event-chip{background:#e6f7f3;color:#086f61}
 .calendar-client-row .calendar-client-info small{line-height:1.45}
+
+
+/* Income-tax calendar: distinct deadline types */
+.internal-deadline-dot{background:#d97706}.notice-deadline-dot{background:#dc4567}.internal-event-chip{background:#fff0d9;color:#95520b}.notice-event-chip{background:#ffe8ee;color:#a92f4d}.month-day.has-internal-deadline .month-day-number{box-shadow:inset 0 0 0 1px #d97706}.month-day.has-notice-deadline .month-day-number{border:2px solid #dc4567}.internal-deadline-icon{background:#fff0d9!important;color:#95520b!important}.notice-deadline-icon{background:#ffe8ee!important;color:#a92f4d!important}.statutory-deadline-icon{background:#e6f7f3!important;color:#086f61!important}
