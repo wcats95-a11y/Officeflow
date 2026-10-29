@@ -1,5 +1,7 @@
 -- OfficeFlow shared workspace roles, scoped RPC access, and task audit trail.
--- The owner account remains the manager of its existing workspace; no workspace payload is migrated or deleted.
+-- Existing workspace payloads remain intact; junior access is mediated through scoped RPCs.
+create schema if not exists officeflow_private;
+grant usage on schema officeflow_private to authenticated;
 
 create table if not exists public.officeflow_workspace_members (
   workspace_owner_id uuid not null references auth.users(id) on delete cascade,
@@ -17,6 +19,8 @@ create unique index if not exists officeflow_workspace_members_one_workspace_per
   on public.officeflow_workspace_members(user_id);
 alter table public.officeflow_workspace_members enable row level security;
 revoke all on public.officeflow_workspace_members from anon, authenticated;
+drop policy if exists officeflow_members_deny_direct_access on public.officeflow_workspace_members;
+create policy officeflow_members_deny_direct_access on public.officeflow_workspace_members for all to authenticated using (false) with check (false);
 
 create table if not exists public.officeflow_task_audit (
   id bigint generated always as identity primary key,
@@ -29,8 +33,10 @@ create table if not exists public.officeflow_task_audit (
 );
 alter table public.officeflow_task_audit enable row level security;
 revoke all on public.officeflow_task_audit from anon, authenticated;
+drop policy if exists officeflow_audit_deny_direct_access on public.officeflow_task_audit;
+create policy officeflow_audit_deny_direct_access on public.officeflow_task_audit for all to authenticated using (false) with check (false);
 
-CREATE OR REPLACE FUNCTION public.officeflow_get_workspace()
+CREATE OR REPLACE FUNCTION officeflow_private.officeflow_get_workspace_impl()
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -69,9 +75,8 @@ begin
   return jsonb_build_object('payload',v_payload,'role',v_role,'display_name',v_display_name,'workspace_owner_id',v_owner,'members','[]'::jsonb,'email',coalesce(v_email,''));
 end;
 $function$
-
-
-CREATE OR REPLACE FUNCTION public.officeflow_register_member(p_email text, p_role text, p_display_name text)
+;
+CREATE OR REPLACE FUNCTION officeflow_private.officeflow_register_member_impl(p_email text, p_role text, p_display_name text)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -108,9 +113,8 @@ begin
   return jsonb_build_object('user_id',v_target_id,'email',coalesce(v_target_email,lower(trim(p_email))),'display_name',v_name,'role',lower(p_role));
 end;
 $function$
-
-
-CREATE OR REPLACE FUNCTION public.officeflow_save_workspace(p_payload jsonb)
+;
+CREATE OR REPLACE FUNCTION officeflow_private.officeflow_save_workspace_impl(p_payload jsonb)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -188,7 +192,24 @@ begin
   return jsonb_build_object('ok',true,'role',v_role);
 end;
 $function$
+;
 
+revoke all on function officeflow_private.officeflow_get_workspace_impl() from public, anon;
+revoke all on function officeflow_private.officeflow_register_member_impl(text,text,text) from public, anon;
+revoke all on function officeflow_private.officeflow_save_workspace_impl(jsonb) from public, anon;
+grant execute on function officeflow_private.officeflow_get_workspace_impl() to authenticated;
+grant execute on function officeflow_private.officeflow_register_member_impl(text,text,text) to authenticated;
+grant execute on function officeflow_private.officeflow_save_workspace_impl(jsonb) to authenticated;
+
+create or replace function public.officeflow_get_workspace()
+returns jsonb language sql security invoker set search_path = pg_catalog, public
+as $$ select officeflow_private.officeflow_get_workspace_impl(); $$;
+create or replace function public.officeflow_register_member(p_email text,p_role text,p_display_name text)
+returns jsonb language sql security invoker set search_path = pg_catalog, public
+as $$ select officeflow_private.officeflow_register_member_impl(p_email,p_role,p_display_name); $$;
+create or replace function public.officeflow_save_workspace(p_payload jsonb)
+returns jsonb language sql security invoker set search_path = pg_catalog, public
+as $$ select officeflow_private.officeflow_save_workspace_impl(p_payload); $$;
 
 revoke all on function public.officeflow_get_workspace() from public, anon;
 revoke all on function public.officeflow_register_member(text,text,text) from public, anon;
