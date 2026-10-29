@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#0f766e" };
 export const metadata: Metadata = {
   title: "OfficeFlow — Work, in motion",
   description: "A calm, focused workspace for managing tasks, projects and delegated work.",
