@@ -76,7 +76,6 @@ export default function Home() {
  const upcomingTasks=tasks.filter(t=>!complete(t)&&(t.internalDue||t.due)>=localDate()&&(t.internalDue||t.due)<=new Date(Date.now()+7*86400000).toISOString().slice(0,10)).sort((a,b)=>(a.internalDue||a.due).localeCompare(b.internalDue||b.due)).slice(0,4);
  const calendarMonthKey=(d:Date)=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
  const calendarDays=(()=>{const first=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth(),1);const offset=(first.getDay()+6)%7;const count=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,0).getDate();const total=Math.ceil((offset+count)/7)*7;return Array.from({length:total},(_,i)=>{const day=i-offset+1;const date=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth(),day);const key=date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0")+"-"+String(date.getDate()).padStart(2,"0");return {date,key,day:date.getDate(),inMonth:date.getMonth()===calendarMonth.getMonth(),events:tasks.filter(t=>t.statutoryDue===key),officialEvents:statutoryEvents.filter(e=>e.date===key)};});})();
- const selectedStatutoryTasks=tasks.filter(t=>t.statutoryDue===selectedCalendarDate);
  type StatutoryEvent={id:string;date:string;tax:"Income tax"|"GST"|"TDS/TCS";title:string;detail:string;status:"Standard"|"Verify";source:string};
  const statutoryEvents=useMemo<StatutoryEvent[]>(()=>{
   const year=calendarMonth.getFullYear(), month=calendarMonth.getMonth(), out:StatutoryEvent[]=[];
@@ -88,7 +87,7 @@ export default function Home() {
   // Recurring standard dates; extensions, taxpayer eligibility and state/filing frequency can change these.
   const nextMonth=(month+1)%12, nextYear=year+(month===11?1:0);
   // TDS deposit for the current month's deductions is generally due by the 7th of the following month.
-  if(month!==2)addEvent(7,"TDS/TCS","Deposit TDS/TCS","Tax deducted/collected in the previous month; March has a special deadline.", "Verify");
+  if(month!==2)addEvent(7,"TDS/TCS","Deposit TDS","Tax deducted in the previous month; March has a special deadline.", "Verify");
   if(month===3)addEvent(30,"TDS/TCS","March TDS deposit","Special March deduction deposit deadline.", "Verify");
   // GST monthly GSTR-1 and GSTR-3B standard due dates.
   addEvent(11,"GST","GSTR-1 (monthly)","Monthly outward-supply statement; monthly filers.", "Verify");
@@ -109,9 +108,9 @@ export default function Home() {
   if(month===4)addEvent(31,"TDS/TCS","Quarterly TDS statements","Q4 (Jan–Mar), generally due 31 May.", "Verify");
   // Annual return/audit dates with the known AY 2026–27 extensions separated from recurring dates.
   if(year===2026&&month===8)addEvent(30,"Income tax","Tax audit report – AY 2026–27","Officially extended to 30 September? Verify latest CBDT notification before relying.", "Verify");
-  if(year===2026&&month===9)addEvent(21,"Income tax","Audit report – AY 2026–27 (extended)","CBDT extension for specified audit cases; check the official notice and applicability.", "Verify","Income Tax Department latest news, 24-Sep-2026");
+  if(year===2026&&month===9)addEvent(21,"Income tax","Audit report – AY 2026–27 (specified cases)","CBDT extension for specified audit cases; check official notice and applicability.", "Verify","Income Tax Department latest news, 24-Sep-2026");
   if(year===2026&&month===10)addEvent(21,"Income tax","ITR – specified audit cases, AY 2026–27","Officially extended from 31 October to 21 November 2026 for specified cases.", "Verify","Income Tax Department latest news, 24-Sep-2026");
-  if(year===2026&&month===6)addEvent(31,"Income tax","ITR – non-audit business/trust, AY 2026–27","Due date for specified non-audit business cases/trusts was extended to 31 August 2026.", "Verify");
+  if(year===2026&&month===7)addEvent(31,"Income tax","ITR – non-audit business/trust, AY 2026–27","Due date for specified non-audit business cases/trusts was extended to 31 August 2026.", "Verify");
   if(year===2026&&month===6)addEvent(31,"Income tax","ITR – ITR-1 / ITR-2, AY 2026–27","Standard due date; confirm taxpayer category and any extension.", "Verify");
   if(year===2027&&month===6)addEvent(31,"Income tax","ITR – ITR-1 / ITR-2, Tax Year 2026–27","Expected statutory date; confirm the applicable return category and current notifications.", "Verify");
   if(year===2027&&month===7)addEvent(31,"Income tax","ITR – non-audit business/trust, Tax Year 2026–27","New Income-tax Act due date for specified non-audit cases; confirm current rules.", "Verify");
@@ -119,6 +118,7 @@ export default function Home() {
   if(year===2027&&month===10)addEvent(30,"Income tax","Transfer-pricing report / ITR, Tax Year 2026–27","Standard transfer-pricing timetable; verify applicable form and deadline.", "Verify");
   return out.sort((a,b)=>a.date.localeCompare(b.date)||a.tax.localeCompare(b.tax)||a.title.localeCompare(b.title));
  },[calendarMonth]);
+ const selectedStatutoryTasks=tasks.filter(t=>t.statutoryDue===selectedCalendarDate);
  function enableDeadlineReminders(){if(!("Notification" in window)){setToast("Browser notifications are not supported on this device");return}Notification.requestPermission().then(permission=>{if(permission==="granted"){setRemindersEnabled(true);setToast("Deadline reminders enabled")}else setToast("Allow notifications in browser settings to enable reminders")})}
  useEffect(()=>{if(!remindersEnabled||typeof Notification==="undefined"||Notification.permission!=="granted")return;const check=()=>{const day=localDate();if(localStorage.getItem("officeflow-reminder-date")===day)return;const due=tasks.filter(t=>!["Filed / completed","Done"].includes(t.status)&&((t.internalDue||t.due)<=day||(t.statutoryDue&&t.statutoryDue>=day&&t.statutoryDue<=new Date(Date.now()+7*86400000).toISOString().slice(0,10))||(t.nextClientFollowUp&&t.nextClientFollowUp<=day)));if(due.length)new Notification("OfficeFlow: action needed",{body:due.length+" task(s) need attention for deadlines or client follow-ups."});localStorage.setItem("officeflow-reminder-date",day)};check();const timer=window.setInterval(check,60*60*1000);return()=>window.clearInterval(timer)},[session?.user?.id,remindersEnabled,tasks]);
  function recordAudit(action:string,taskTitle?:string,details?:string){setAuditLog(old=>[...old,{id:crypto.randomUUID(),at:new Date().toISOString(),actor:session?.user?.email||"Charan Reddy",action,taskTitle,details}].slice(-1000))}
