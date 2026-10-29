@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../supabaseClient";
 
 type Status = "To Do" | "In Progress" | "Waiting for client" | "Waiting for documents" | "Ready for review" | "Under Review" | "Rework required" | "Approved" | "Filed / completed" | "On hold" | "Done";
@@ -22,6 +22,7 @@ export default function Home() {
  const [tasks,setTasks] = useState<Task[]>(seed);
  const [ready,setReady] = useState(false);
  const [session,setSession] = useState<any>(null);
+ const sessionUserId=useRef<string|null>(null);
  const [authReady,setAuthReady] = useState(false);
  const [localMode,setLocalMode] = useState(false);
  const [authMode,setAuthMode] = useState<"signin"|"signup">("signin");
@@ -70,7 +71,7 @@ export default function Home() {
   if(!supabase){setAuthReady(true);setCloudStatus("Saved on this device");return}
   let alive=true;
   supabase.auth.getSession().then(({data})=>{if(alive){setSession(data.session);setAuthReady(true);setCloudStatus(data.session?"Connecting secure workspace…":"Sign in required")}}).catch(()=>{if(alive){setAuthReady(true);setCloudStatus("Cloud connection unavailable")}});
-  const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,nextSession)=>{if(alive){setSession(current=>{const previousId=current?.user?.id||null;const nextId=nextSession?.user?.id||null;if(previousId!==nextId){setCloudHydrated(false);setCloudReady(false);setCloudStatus(nextId?"Loading secure workspace…":"Sign in required");}return nextSession;})}});
+  const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,nextSession)=>{if(alive){const nextId=nextSession?.user?.id||null;if(sessionUserId.current!==nextId){sessionUserId.current=nextId;setCloudHydrated(false);setCloudReady(false);setCloudStatus(nextId?"Loading secure workspace…":"Sign in required");}setSession(nextSession);}});
   return ()=>{alive=false;subscription.unsubscribe()};
  },[]);
  useEffect(()=>{
