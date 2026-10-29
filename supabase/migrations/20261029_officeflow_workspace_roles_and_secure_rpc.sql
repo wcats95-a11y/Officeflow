@@ -123,7 +123,7 @@ AS $function$
 declare
   v_uid uuid := auth.uid(); v_owner uuid; v_role text; v_display_name text; v_existing jsonb; v_next_payload jsonb;
   v_old_task jsonb; v_submitted jsonb; v_safe jsonb; v_updated jsonb; v_new_task jsonb;
-  v_tasks jsonb := '[]'::jsonb; v_changed text[]; v_task_id text; v_found boolean;
+  v_tasks jsonb := '[]'::jsonb; v_changed text[]; v_task_id text; v_found boolean; v_keep_existing boolean; v_existing_activity_at text; v_submitted_activity_at text;
 begin
   if v_uid is null then raise exception 'Sign in is required'; end if;
   if jsonb_typeof(p_payload)<>'object' then raise exception 'Workspace payload must be an object'; end if;
@@ -138,22 +138,34 @@ begin
       v_task_id:=v_old_task->>'id'; v_submitted:=null;
       select value into v_submitted from jsonb_array_elements(coalesce(p_payload->'tasks','[]'::jsonb)) where value->>'id'=v_task_id limit 1;
       if found then
-        select coalesce(array_agg(e.key order by e.key),'{}'::text[]) into v_changed
-          from jsonb_each(v_submitted) e where v_old_task->e.key is distinct from e.value and e.key<>'activity';
-        if cardinality(v_changed)>0 then
-          insert into public.officeflow_task_audit(workspace_owner_id,task_id,actor_user_id,action,changed_fields) values(v_owner,coalesce(v_task_id,'unknown'),v_uid,'task_updated',v_changed);
+        select max(coalesce(e.value->>'at','')) into v_existing_activity_at from jsonb_array_elements(coalesce(v_old_task->'activity','[]'::jsonb)) e(value);
+        select max(coalesce(e.value->>'at','')) into v_submitted_activity_at from jsonb_array_elements(coalesce(v_submitted->'activity','[]'::jsonb)) e(value);
+        v_keep_existing := coalesce(v_existing_activity_at,'') > coalesce(v_submitted_activity_at,'');
+        if v_keep_existing then v_updated:=v_old_task; else v_updated:=v_submitted; end if;
+        if not v_keep_existing then
+          select coalesce(array_agg(e.key order by e.key),'{}'::text[]) into v_changed
+            from jsonb_each(v_submitted) e where v_old_task->e.key is distinct from e.value and e.key<>'activity';
+          if cardinality(v_changed)>0 then
+            insert into public.officeflow_task_audit(workspace_owner_id,task_id,actor_user_id,action,changed_fields)
+            values(v_owner,coalesce(v_task_id,'unknown'),v_uid,'task_updated',v_changed);
+          end if;
         end if;
       else
-        insert into public.officeflow_task_audit(workspace_owner_id,task_id,actor_user_id,action,changed_fields) values(v_owner,coalesce(v_task_id,'unknown'),v_uid,'task_deleted',array['task']);
+        -- A stale manager client may not yet have received a junior's new task. Preserve it.
+        v_updated:=v_old_task;
       end if;
+      v_tasks:=v_tasks||jsonb_build_array(v_updated);
     end loop;
     for v_submitted in select value from jsonb_array_elements(coalesce(p_payload->'tasks','[]'::jsonb))
     loop
       if not exists(select 1 from jsonb_array_elements(coalesce(v_existing->'tasks','[]'::jsonb)) x(value) where x.value->>'id'=v_submitted->>'id') then
-        insert into public.officeflow_task_audit(workspace_owner_id,task_id,actor_user_id,action,changed_fields) values(v_owner,coalesce(v_submitted->>'id','unknown'),v_uid,'task_created',array['task']);
+        v_tasks:=v_tasks||jsonb_build_array(v_submitted);
+        insert into public.officeflow_task_audit(workspace_owner_id,task_id,actor_user_id,action,changed_fields)
+        values(v_owner,coalesce(v_submitted->>'id','unknown'),v_uid,'task_created',array['task']);
       end if;
     end loop;
-    update public.officeflow_workspace_state set payload=p_payload,schema_version=greatest(schema_version,1),updated_at=now() where owner_id=v_owner;
+    v_next_payload:=jsonb_set(p_payload,'{tasks}',v_tasks,true);
+    update public.officeflow_workspace_state set payload=v_next_payload,schema_version=greatest(schema_version,1),updated_at=now() where owner_id=v_owner;
     return jsonb_build_object('ok',true,'role',v_role);
   end if;
 
@@ -167,9 +179,8 @@ begin
       select coalesce(array_agg(e.key order by e.key),'{}'::text[]) into v_changed from jsonb_each(v_safe) e where v_old_task->e.key is distinct from e.value;
       v_updated:=v_old_task||v_safe;
       v_updated:=jsonb_set(v_updated,'{activity}',coalesce(v_old_task->'activity','[]'::jsonb)||jsonb_build_array(jsonb_build_object('at',now(),'actor',v_display_name,'message',case when cardinality(v_changed)>0 then 'Task updated: '||array_to_string(v_changed,', ') else 'Task opened for editing' end)),true);
-      if coalesce(v_old_task->>'approvalStatus','approved')='pending' then
-        v_updated:=jsonb_set(v_updated,'{status}','"To Do"'::jsonb,true);
-        v_updated:=jsonb_set(v_updated,'{approvalStatus}','"pending"'::jsonb,true);
+      if coalesce(v_old_task->>'approvalStatus','approved') in ('pending','changes_requested') then
+        v_updated:=jsonb_set(v_updated,'{status}',case when v_old_task->>'approvalStatus'='pending' then '"To Do"'::jsonb else '"Rework required"'::jsonb end,true);
       end if;
       if cardinality(v_changed)>0 then insert into public.officeflow_task_audit(workspace_owner_id,task_id,actor_user_id,action,changed_fields) values(v_owner,coalesce(v_old_task->>'id','unknown'),v_uid,'task_updated',v_changed); end if;
       v_tasks:=v_tasks||jsonb_build_array(v_updated);
@@ -193,13 +204,45 @@ begin
 end;
 $function$
 ;
+CREATE OR REPLACE FUNCTION officeflow_private.officeflow_delete_task_impl(p_task_id text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'public', 'auth'
+AS $function$
+declare
+  v_uid uuid := auth.uid(); v_owner uuid; v_role text; v_payload jsonb; v_exists boolean;
+begin
+  if v_uid is null then raise exception 'Sign in is required'; end if;
+  select m.workspace_owner_id,m.role into v_owner,v_role from public.officeflow_workspace_members m where m.user_id=v_uid limit 1;
+  if v_owner is null then v_owner:=v_uid; v_role:='manager'; end if;
+  if v_role<>'manager' then raise exception 'Only managers can delete tasks'; end if;
+  select s.payload into v_payload from public.officeflow_workspace_state s where s.owner_id=v_owner for update;
+  if v_payload is null then raise exception 'Workspace not found'; end if;
+  select exists(select 1 from jsonb_array_elements(coalesce(v_payload->'tasks','[]'::jsonb)) x(value) where x.value->>'id'=p_task_id) into v_exists;
+  if not v_exists then return jsonb_build_object('ok',true,'deleted',false); end if;
+  insert into public.officeflow_task_audit(workspace_owner_id,task_id,actor_user_id,action,changed_fields)
+  values(v_owner,p_task_id,v_uid,'task_deleted',array['task']);
+  update public.officeflow_workspace_state
+     set payload=jsonb_set(v_payload,'{tasks}',(
+       select coalesce(jsonb_agg(x.value order by x.ordinality),'[]'::jsonb)
+       from jsonb_array_elements(coalesce(v_payload->'tasks','[]'::jsonb)) with ordinality x(value,ordinality)
+       where x.value->>'id'<>p_task_id
+     ),true),updated_at=now()
+   where owner_id=v_owner;
+  return jsonb_build_object('ok',true,'deleted',true);
+end;
+$function$
+;
 
 revoke all on function officeflow_private.officeflow_get_workspace_impl() from public, anon;
 revoke all on function officeflow_private.officeflow_register_member_impl(text,text,text) from public, anon;
 revoke all on function officeflow_private.officeflow_save_workspace_impl(jsonb) from public, anon;
+revoke all on function officeflow_private.officeflow_delete_task_impl(text) from public, anon;
 grant execute on function officeflow_private.officeflow_get_workspace_impl() to authenticated;
 grant execute on function officeflow_private.officeflow_register_member_impl(text,text,text) to authenticated;
 grant execute on function officeflow_private.officeflow_save_workspace_impl(jsonb) to authenticated;
+grant execute on function officeflow_private.officeflow_delete_task_impl(text) to authenticated;
 
 create or replace function public.officeflow_get_workspace()
 returns jsonb language sql security invoker set search_path = pg_catalog, public
@@ -210,10 +253,15 @@ as $$ select officeflow_private.officeflow_register_member_impl(p_email,p_role,p
 create or replace function public.officeflow_save_workspace(p_payload jsonb)
 returns jsonb language sql security invoker set search_path = pg_catalog, public
 as $$ select officeflow_private.officeflow_save_workspace_impl(p_payload); $$;
+create or replace function public.officeflow_delete_task(p_task_id text)
+returns jsonb language sql security invoker set search_path = pg_catalog, public
+as $$ select officeflow_private.officeflow_delete_task_impl(p_task_id); $$;
 
 revoke all on function public.officeflow_get_workspace() from public, anon;
 revoke all on function public.officeflow_register_member(text,text,text) from public, anon;
 revoke all on function public.officeflow_save_workspace(jsonb) from public, anon;
+revoke all on function public.officeflow_delete_task(text) from public, anon;
 grant execute on function public.officeflow_get_workspace() to authenticated;
 grant execute on function public.officeflow_register_member(text,text,text) to authenticated;
 grant execute on function public.officeflow_save_workspace(jsonb) to authenticated;
+grant execute on function public.officeflow_delete_task(text) to authenticated;
