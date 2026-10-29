@@ -8,5 +8,5 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, statusBarStyle: "default", title: "OfficeFlow" }
 };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><head><meta name="theme-color" content="#0f766e"/><link rel="apple-touch-icon" href="/icons/icon-192.png"/></head><body>{children}</body></html>;
+  return <html lang="en"><head><meta name="theme-color" content="#0f766e"/><link rel="apple-touch-icon" href="/icons/officeflow.svg"/><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-capable" content="yes"/></head><body>{children}</body></html>;
 }
