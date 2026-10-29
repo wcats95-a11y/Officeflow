@@ -3,6 +3,10 @@
 OfficeFlow is a responsive task and delegation workspace tailored toward CA office and direct-tax operations.
 
 ## Current features
+- Supabase email/password authentication and owner-scoped workspace-state sync when the configured Supabase project is available
+- Simple Junior workload tab with Income Tax-only assigned/open/overdue/review metrics and a direct filtered task view
+- Income Tax-only monthly calendar with separate statutory, internal and notice-response deadline colours
+- Calendar deadline status defaults to verification required unless explicitly supported by the schedule
 - Task overview, search, status and priority filters, Kanban columns
 - Create and edit tasks, update status, complete/reopen tasks
 - CA workflow metadata: financial year, assessment year, task type, preparer, reviewer and handover notes
@@ -23,6 +27,10 @@ OfficeFlow is a responsive task and delegation workspace tailored toward CA offi
 - Open http://localhost:3000
 
 ## Important limitations
-This is still a single-browser prototype. Data is stored in the browser's localStorage, not in a shared database. Google sign-in is intentionally deferred. The dedicated Supabase database and secure load/save helpers are prepared, but app-level cloud sync and cross-device sharing remain disabled until authentication and the sync/import experience are completed. There are no scheduled reminders, official WhatsApp Business Platform integration, or WhatsApp delivery/read/reply tracking. Browser storage may be cleared or evicted; export a backup regularly. Do not enter confidential client documents, PANs, Aadhaar numbers, bank details or sensitive tax workpapers.
-
-The manager dashboard counts are derived from tasks currently stored in this browser. They are not a substitute for an independently maintained statutory deadline register. Verify statutory dates against authoritative sources and maintain a separate reliable deadline control until reminders and cloud persistence are implemented and tested.
+- Supabase sync stores a user's OfficeFlow workspace in the owner-scoped `officeflow_workspace_state` payload. This supports the same account across devices; it does not yet provide multi-user firm workspaces, membership/invitation flows, or role-based permissions.
+- Browser localStorage remains a local cache and may be cleared or evicted. Export a backup regularly and test restore before relying on it.
+- Reminder alerts are browser-local and depend on browser permission and OfficeFlow running. Server-side scheduled email/escalation reminders are not yet configured.
+- Uploaded notice documents may be stored as browser data URLs within task state; private Supabase Storage upload, retention controls, and secure document-sharing workflows are not yet implemented. Do not upload highly sensitive client documents or workpapers until that is completed.
+- WhatsApp actions open a prefilled message; there is no official WhatsApp Business Platform integration or delivery/read/reply tracking.
+- Income Tax statutory dates are a baseline, not a complete verified official register. Verify taxpayer applicability, current notifications, and extensions against authoritative sources before relying on a date. The calendar intentionally marks standard dates as needing verification unless specifically confirmed.
+- Dashboard metrics depend on the data entered and on the task's tax-type classification. Explicitly set task type and review deadline fields; do not rely solely on keyword classification for legal matters.
