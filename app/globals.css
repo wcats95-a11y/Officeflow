@@ -297,3 +297,10 @@ input:focus,select:focus,textarea:focus{border-color:#8e85f3!important;box-shado
 .calendar-official-row .calendar-client-info{flex:1}
 .calendar-verify-tag{flex-shrink:0;padding:5px 7px;border-radius:7px;background:#fff2d7;color:#8a4b08;font-size:10px;font-weight:800}
 @media(max-width:560px){.calendar-schedule-controls{align-items:flex-start;flex-direction:column}.calendar-schedule-controls label{width:100%;justify-content:space-between}.calendar-schedule-controls select{max-width:60%}.calendar-official-row{align-items:flex-start}.calendar-verify-tag{font-size:9px}}
+
+/* Client notice and task deadlines in monthly calendar */
+.month-day.has-task-deadline{border-color:rgba(98,88,232,.32)}
+.month-day.has-task-deadline .month-day-number{color:#5146c7}
+.task-event-chip{background:#efedff;color:#5045bd}
+.official-event-chip{background:#e6f7f3;color:#086f61}
+.calendar-client-row .calendar-client-info small{line-height:1.45}
