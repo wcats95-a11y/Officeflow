@@ -12,7 +12,7 @@ const statuses: Status[] = ["To Do","In Progress","Waiting for client","Waiting 
 const priorities: Priority[] = ["Urgent","High","Medium","Low"];
 const initials = (s:string) => s.split(" ").map(x=>x[0]).join("").slice(0,2).toUpperCase();
 const localDate = () => { const d = new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
-const isValidISODate = (value:string) => { if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return false; const [y,m,d]=value.split("-").map(Number); const date=new Date(y,m-1,d); return date.getFullYear()===y && date.getMonth()===m-1 && date.getDate()===d; };
+const isValidISODate = (value:string) => { if(!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false; const [y,m,d]=value.split("-").map(Number); const date=new Date(y,m-1,d); return date.getFullYear()===y && date.getMonth()===m-1 && date.getDate()===d; };
 const taskDeadlineDates = (t:Task) => [t.statutoryDue,t.internalDue,t.due].filter((v):v is string=>Boolean(v)&&isValidISODate(v as string));
 
 export default function Home() {
