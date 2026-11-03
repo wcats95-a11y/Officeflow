@@ -6,7 +6,7 @@ import {
 } from "../lib/comp-off.ts";
 import {
   starterTaskTypes, mergeStarterTaskTypes, mergeMatterTypeNames,
-  taxYearOptions, normalizeTaxYear, validateActYears
+  taxYearOptions, normalizeTaxYear, validateActYears, isIncomeTaxTaskLike
 } from "../lib/income-tax-matters.ts";
 import {
   presetHolidays2026_2027, mergePresetHolidays
@@ -64,6 +64,13 @@ test("Act-specific catalogues remain separate and partial saved 2025 lists are c
   assert.ok(mergeMatterTypeNames(["Custom matter"]).includes("Custom matter"));
 });
 
+test("direct-tax classification includes TDS and TCS but excludes GST",()=>{
+  assert.equal(isIncomeTaxTaskLike({taskType:"TDS return – Form 24Q",matterType:"Compliance"}),true);
+  assert.equal(isIncomeTaxTaskLike({taskType:"TCS return – Form 27EQ",matterType:"Compliance"}),true);
+  assert.equal(isIncomeTaxTaskLike({title:"Tax collected at source default notice"}),true);
+  assert.equal(isIncomeTaxTaskLike({title:"GST reconciliation"}),false);
+});
+
 test("tax-year and FY/AY validation enforces the correct Act format",()=>{
   assert.equal(normalizeTaxYear("2026"),"2026-27");
   assert.deepEqual(taxYearOptions(2026,1),["2026-27","2027-28"]);
@@ -89,6 +96,7 @@ test("holiday migration preserves a previously removed 2026 preset while adding 
   const saved=oldDates.filter(date=>date!=="2026-01-15").map(date=>({date,name:date}));
   const migrated=mergePresetHolidays(saved,2);
   assert.ok(!migrated.some(x=>x.date==="2026-01-15"));
+  assert.equal(migrated.find(x=>x.date==="2026-01-26").status,"karnataka-official");
   assert.ok(migrated.some(x=>x.date==="2027-03-10"));
   const current=mergePresetHolidays([{date:"2026-01-26",name:"Republic Day"}],3);
   assert.deepEqual(current,[{date:"2026-01-26",name:"Republic Day"}]);
