@@ -16,7 +16,19 @@ const STARTER_1961:Record<string,string[]> = {
  Prosecution:["Notice received","Reply filed","Other"],
  Other:["Other"]
 };
-export function starterTaskTypes():MatterTaskType[]{return Object.entries(STARTER_1961).flatMap(([matterType,names])=>names.map((taskType,index)=>({id:"1961-"+matterType+"-"+index,matterType,taskType,act:"Income-tax Act, 1961" as const,sectionReference:taskType.match(/u\/s\s+([0-9A-Za-z()]+)/)?.[1]||"",active:true,sortOrder:index})));}
+const STARTER_2025:Record<string,string[]> = {
+ Assessment:["Return processing / intimation","Scrutiny assessment","Information request","Reassessment proceeding","Show-cause notice","Assessment order received","Other"],
+ Appeal:["Filing appeal","Hearing notice","Written submissions","Appeal order received","Stay application","Other"],
+ Rectification:["Rectification application","Order received","Other"],
+ Refund:["Refund status follow-up","Refund reissue request","Other"],
+ Penalty:["Penalty notice","Reply filed","Penalty order","Other"],
+ Prosecution:["Notice received","Reply filed","Other"],
+ Other:["TDS/TCS compliance","Tax deduction / collection default","Tax opinion","Other"]
+};
+export function starterTaskTypes():MatterTaskType[]{
+ const build=(catalogue:Record<string,string[]>,act:IncomeTaxAct,prefix:string)=>Object.entries(catalogue).flatMap(([matterType,names])=>names.map((taskType,index)=>({id:prefix+"-"+matterType+"-"+index,matterType,taskType,act,sectionReference:"",active:true,sortOrder:index})));
+ return [...build(STARTER_1961,"Income-tax Act, 1961","1961"),...build(STARTER_2025,"Income-tax Act, 2025","2025")];
+}
 export function yearOptions(currentYear=new Date().getFullYear(),_pastYears?:number,futureYears=10):number[]{const latest=currentYear+futureYears;return Array.from({length:latest-1900+1},(_,i)=>latest-i);}
 export function financialYearOptions():string[]{return yearOptions(new Date().getFullYear()+1,100,10).map(y=>(y-1)+"-"+String(y).slice(-2));}
 export function assessmentYearFromFinancialYear(fy:string):string{const m=fy.match(/^(\d{4})-(\d{2}|\d{4})$/);if(!m)return "";const y=Number(m[1])+1;return y+"-"+String(y+1).slice(-2);}
