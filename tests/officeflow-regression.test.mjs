@@ -117,7 +117,14 @@ test("2026 Karnataka general and restricted references plus 2027 central and pro
   assert.equal(byDate.get("2027-08-25")?.name,"Janmashtami (Vaishnav)");
   assert.equal(byDate.get("2027-04-07")?.status,"provisional");
   assert.equal(byDate.get("2027-09-04")?.status,"provisional");
-  assert.equal(byDate.has("2027-05-09"),false);
+  assert.equal(byDate.get("2027-05-05")?.status,undefined);
+  assert.equal(byDate.get("2027-05-09")?.status,"provisional");
+  assert.equal(byDate.get("2027-09-29")?.status,"provisional");
+  assert.equal(byDate.get("2027-10-10")?.status,"provisional");
+  assert.equal(byDate.get("2027-10-15")?.status,"provisional");
+  assert.equal(byDate.get("2027-10-28")?.status,"provisional");
+  assert.equal(byDate.get("2027-11-16")?.status,"provisional");
+  assert.equal(byDate.has("2027-10-30"),false);
 });
 
 test("holiday v3 migration preserves user removals and removes obsolete provisional defaults", () => {
@@ -125,9 +132,14 @@ test("holiday v3 migration preserves user removals and removes obsolete provisio
     {date:"2026-01-15",name:"Makara Sankranti",status:"karnataka-official"},
     {date:"2027-01-14",name:"Makara Sankranti (estimated)",status:"provisional"},
     {date:"2027-04-08",name:"Ugadi (estimated)",status:"provisional"},
+    {date:"2027-05-09",name:"Basava Jayanthi (estimated)",status:"provisional"},
     {date:"2027-09-04",name:"Ganesh Chaturthi (estimated)",status:"provisional"},
+    {date:"2027-09-29",name:"Mahalaya Amavasye (estimated)",status:"provisional"},
     {date:"2027-10-09",name:"Dussehra",status:"central-reference"},
     {date:"2027-10-10",name:"Vijayadashami (estimated)",status:"provisional"},
+    {date:"2027-10-15",name:"Valmiki Jayanthi (estimated)",status:"provisional"},
+    {date:"2027-10-30",name:"Balipadyami / Deepavali (estimated)",status:"provisional"},
+    {date:"2027-11-16",name:"Kanakadasa Jayanthi (estimated)",status:"provisional"},
   ];
   const migrated=mergePresetHolidays(oldV3,3);
   const dates=new Set(migrated.map(item=>item.date));
@@ -138,7 +150,12 @@ test("holiday v3 migration preserves user removals and removes obsolete provisio
   assert.equal(dates.has("2027-04-07"),true);
   assert.equal(dates.has("2027-09-04"),true);
   assert.equal(dates.has("2027-10-09"),true);
-  assert.equal(dates.has("2027-10-10"),false);
+  assert.equal(dates.has("2027-10-10"),true);
+  assert.equal(dates.has("2027-05-09"),true);
+  assert.equal(dates.has("2027-09-29"),true);
+  assert.equal(dates.has("2027-10-15"),true);
+  assert.equal(dates.has("2027-11-16"),true);
+  assert.equal(dates.has("2027-10-30"),false);
 });
 
 test("office-confirmed obsolete holiday is retained during migration; v4 removals stay removed", () => {
