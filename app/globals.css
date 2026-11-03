@@ -735,3 +735,121 @@ input,select,textarea{font-size:16px}
 @media(prefers-reduced-motion:reduce){
   .app *, .app *:before, .app *:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
+
+
+/* OfficeFlow 2.0 — dark-first contrast, calendar focus and CMR signature */
+.app.dark{color-scheme:dark}
+.app.dark .topbar,
+.app.dark .sidebar,
+.app.dark .workspace,
+.app.dark .searchbox,
+.app.dark .stat-card,
+.app.dark .dashboard-card,
+.app.dark .task-panel,
+.app.dark .calendar-date-details,
+.app.dark .statutory-calendar,
+.app.dark .entity-card,
+.app.dark .directory-form,
+.app.dark .directory-row,
+.app.dark .kanban-column,
+.app.dark .kanban-card,
+.app.dark .modal,
+.app.dark .auth-card{
+  background-color:var(--surface);
+  color:var(--ink);
+  border-color:var(--line);
+}
+.app.dark .calendar-date-details{
+  scroll-margin-top:90px;
+  background:linear-gradient(145deg,#12263a,#101b2b);
+  border:1px solid rgba(45,212,191,.3);
+  box-shadow:0 14px 36px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.035);
+}
+.app.dark .calendar-detail-heading h3,
+.app.dark .calendar-client-info b,
+.app.dark .calendar-official-row b,
+.app.dark .calendar-date-details .heading-count{color:#f1f7ff}
+.app.dark .calendar-client-row{color:#eaf2fc;border-color:var(--line)}
+.app.dark .calendar-client-row:hover{background:rgba(45,212,191,.075)}
+.app.dark .calendar-client-info small,
+.app.dark .calendar-empty,
+.app.dark .calendar-note,
+.app.dark .calendar-schedule-count{color:#a9bad0}
+.app.dark .calendar-client-icon{background:rgba(45,212,191,.14);color:#5eead4}
+.app.dark .calendar-verify-tag{background:rgba(245,158,11,.16);color:#fbbf24}
+.app.dark .month-grid{border-color:var(--line);background:var(--line)}
+.app.dark .month-weekday{background:#0e1929;color:#a8b8cd}
+.app.dark .month-day{
+  background:#111f31;color:#edf4ff;border-color:var(--line);
+}
+.app.dark .month-day.outside-month{background:#0b1524;color:#7f91a9}
+.app.dark .month-day:hover{background:#183047}
+.app.dark .month-day.selected-day{background:#153b43;box-shadow:inset 0 0 0 2px #2dd4bf}
+.app.dark .month-day.today-day .month-day-number{background:#0d9488;color:#fff}
+.app.dark .month-day-number{color:#edf4ff}
+.app.dark .month-day-count,.app.dark .month-more{color:#c2d2e5}
+.app.dark .official-event-chip{background:rgba(45,212,191,.16);color:#83eee0}
+.app.dark .internal-event-chip{background:rgba(245,158,11,.16);color:#fbc36a}
+.app.dark .notice-event-chip{background:rgba(244,114,182,.15);color:#f9a8d4}
+.app.dark .calendar-note{background:transparent}
+.app.dark .calendar-month-toolbar h3{color:#f1f7ff}
+.app.dark .calendar-schedule-controls{background:#101b2b;border-color:var(--line)}
+.app.dark .calendar-schedule-controls label{color:#e5eefb}
+.app.dark .calendar-schedule-controls select{background:#14243a;color:#edf4ff;border-color:var(--line)}
+.app.dark .task-table-head{background:#14243a;color:#a8bad0}
+.app.dark .task-row{color:#e8f0fb;border-color:var(--line)}
+.app.dark .task-row:hover{background:rgba(45,212,191,.07)}
+.app.dark .task-name-wrap b,.app.dark .task-detail-link{color:#f0f6ff}
+.app.dark .task-name-wrap small,.app.dark .field-hint{color:#9fb1c8}
+.app.dark .searchbox input,.app.dark input,.app.dark select,.app.dark textarea{
+  color:#f0f6ff;background:#14243a;border-color:#34465e;
+}
+.app.dark input::placeholder,.app.dark textarea::placeholder{color:#8296b0}
+.app.dark .modal label{color:#c1d0e2}
+.app.dark .modal-footer{border-color:var(--line)}
+.app.dark .modal-footer span{color:#9fb1c8}
+.app.dark .secondary-button,.app.dark .icon-button{
+  background:#17273b;color:#e7f0fb;border-color:#34465e;
+}
+.app.dark .secondary-button:hover,.app.dark .icon-button:hover{background:#20364e;border-color:#2dd4bf}
+.app.dark .priority-pill.medium{background:rgba(129,140,248,.16);color:#b7bcff}
+.app.dark .priority-pill.high{background:rgba(245,158,11,.15);color:#fbbf24}
+.app.dark .priority-pill.low{background:rgba(52,211,153,.14);color:#6ee7b7}
+.app.dark .priority-pill.urgent{background:rgba(248,113,113,.15);color:#fca5a5}
+.app.dark .status-select{background:#14243a;color:#eaf2fc;border-color:#34465e}
+.app.dark .status-select option,.app.dark select option{background:#14243a;color:#edf4ff}
+.app.dark .quick-action-grid button{background:#14243a;border-color:var(--line);color:#eaf2fc}
+.app.dark .quick-action-grid button:hover{background:#1a3448;border-color:#2dd4bf}
+.app.dark .quick-action-grid b{color:#f1f7ff}
+.app.dark .quick-action-grid small{color:#9fb1c8}
+.app.dark .detail-meta-grid>div{background:#14243a;border-color:var(--line)}
+.app.dark .detail-meta-grid b{color:#f0f6ff}
+.app.dark .detail-section{border-color:var(--line)}
+.app.dark .detail-section h3{color:#f0f6ff}
+.app.dark .detail-section p{color:#b4c3d7}
+.app.dark .calendar-date-details .calendar-client-row{border-top-color:rgba(151,177,207,.18)}
+.app .junior-multi-select{
+  min-height:104px;padding:8px 10px;border:1px solid var(--line);
+  border-radius:11px;background:var(--surface-2);color:var(--ink);
+}
+.app .junior-multi-select option{padding:7px 8px;border-radius:6px}
+.app .junior-multi-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
+.app.dark .junior-multi-select{background:#14243a;color:#edf4ff;border-color:#34465e}
+.app.dark .junior-multi-select option:checked{background:#0d625e;color:#fff}
+.app .cmr-watermark{
+  position:fixed;right:18px;bottom:13px;z-index:40;
+  display:flex;align-items:center;gap:4px;
+  padding:7px 11px;border:1px solid rgba(20,184,166,.22);
+  border-radius:999px;background:color-mix(in srgb,var(--surface) 88%,transparent);
+  color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.04em;
+  box-shadow:0 5px 18px rgba(8,24,43,.12);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  pointer-events:none;user-select:none;
+}
+.app .cmr-watermark b{color:var(--accent);font-weight:850;letter-spacing:.1em}
+.app.dark .cmr-watermark{background:rgba(13,29,45,.88);border-color:rgba(45,212,191,.28);color:#a9bad0}
+.app.dark .cmr-watermark b{color:#5eead4}
+@media(max-width:560px){
+  .app .cmr-watermark{right:10px;bottom:8px;padding:6px 9px;font-size:9px}
+  .app .junior-multi-select{min-height:92px}
+}
