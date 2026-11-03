@@ -73,7 +73,7 @@ export function normalizeCompOffEntries(value: unknown): CompOffEntry[] {
 export function getCompOffAvailableEntries(value: unknown, onDate: string): CompOffEntry[] {
   if (!isCompOffISODate(onDate)) return [];
   const entries = normalizeCompOffEntries(value);
-  const usedIds = new Set(entries.filter(entry => entry.type === "used" && entry.earnedEntryId).map(entry => entry.earnedEntryId as string));
+  const usedIds = new Set(entries.filter(entry => entry.type === "used" && entry.date <= onDate && entry.earnedEntryId).map(entry => entry.earnedEntryId as string));
   return entries
     .filter(entry => entry.type === "earned" && entry.date <= onDate && (entry.expiresAt || compOffExpiryDate(entry.date)) >= onDate && !usedIds.has(entry.id))
     .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
