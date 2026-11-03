@@ -1,64 +1,128 @@
 export type HolidayStatus = "karnataka-official" | "national" | "karnataka-fixed" | "central-reference" | "provisional" | "office-confirmed";
 export type HolidayEntry = { date: string; name: string; status?: HolidayStatus; sourceLabel?: string };
 
+export const HOLIDAY_PRESET_VERSION = 4;
+
 const LEGACY_V2_PRESET_DATES = [
   "2026-01-15","2026-01-26","2026-03-19","2026-03-21","2026-03-31","2026-04-03","2026-04-14","2026-04-20","2026-05-01","2026-05-28","2026-06-26","2026-08-15","2026-08-26","2026-09-14","2026-10-02","2026-10-20","2026-10-21","2026-11-10","2026-11-27","2026-12-25",
   "2027-01-26","2027-05-01","2027-08-15","2027-10-02","2027-11-01","2027-12-25",
 ] as const;
 
+// Exact dates present in the version-3 defaults. Missing dates in a v3 saved
+// list are treated as deliberate user removals during the v3 -> v4 migration.
+const LEGACY_V3_PRESET_DATES = [
+  "2026-01-15","2026-01-26","2026-03-19","2026-03-21","2026-03-30","2026-04-03","2026-04-14","2026-04-20","2026-05-01","2026-05-28","2026-06-26","2026-08-15","2026-08-26","2026-09-14","2026-10-02","2026-10-20","2026-10-21","2026-11-01","2026-11-10","2026-11-27","2026-12-25",
+  "2027-01-14","2027-01-26","2027-03-06","2027-03-10","2027-03-26","2027-04-08","2027-04-14","2027-04-19","2027-05-01","2027-05-09","2027-05-17","2027-05-20","2027-06-16","2027-08-15","2027-09-04","2027-09-29","2027-10-02","2027-10-09","2027-10-10","2027-10-15","2027-10-29","2027-10-30","2027-11-01","2027-11-14","2027-11-16","2027-12-25",
+] as const;
+
 export const HOLIDAY_PRESET_NOTICE =
-  "2026 uses Karnataka's DPAR general-holiday notification, updated for the 30-Mar-2026 Mahavir Jayanti amendment. For 2027, the Karnataka State general-holiday notification was not yet published as at 3-Nov-2026: the calendar therefore combines national/fixed dates, the DoPT central reference list and clearly marked Karnataka festival estimates. Central and provisional dates are not automatically holidays for a private office. Under Karnataka's holiday law, private establishments generally declare the five fixed holidays plus five festival holidays selected in consultation with employees. Use Confirm for office only for dates your firm actually observes; the firm's declared holiday list governs.";
+  "2026 uses Karnataka DPAR Notification No. DPAR 16 HHL 2025 dated 17-Nov-2025, with Mahavir Jayanti revised to 30-Mar-2026. For 2027, Karnataka's State general-holiday notification had not been published as at 3-Nov-2026. The calendar therefore includes the DoPT 2027 central-government gazetted list as a reference, Karnataka fixed-date holidays, and clearly marked provisional Karnataka festival estimates. Central-reference and provisional dates are not automatically holidays for a private office. Confirm your firm's declared holiday list; moon-sighting dates may change.";
+
+function validDate(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
 
 export function presetHolidays2026_2027(): HolidayEntry[] {
   const k2026: HolidayEntry[] = [
-    ["2026-01-15","Makara Sankranti"],["2026-01-26","Republic Day"],["2026-03-19","Ugadi"],["2026-03-21","Khutub-E-Ramzan (moon-sighting dependent)"],
-    ["2026-03-30","Mahaveera Jayanthi (revised from 31-Mar-2026)"],["2026-04-03","Good Friday"],["2026-04-14","Dr. B.R. Ambedkar Jayanthi"],["2026-04-20","Basava Jayanthi / Akshaya Tritiya"],
-    ["2026-05-01","May Day"],["2026-05-28","Bakrid (moon-sighting dependent)"],["2026-06-26","Last Day of Moharam (moon-sighting dependent)"],["2026-08-15","Independence Day"],
-    ["2026-08-26","Eid-Milad (moon-sighting dependent)"],["2026-09-14","Varasiddhi Vinayaka Vrata"],["2026-10-02","Gandhi Jayanti"],["2026-10-20","Mahanavami / Ayudhapooja"],
-    ["2026-10-21","Vijayadasami"],["2026-11-01","Karnataka Rajyotsava (falls on Sunday)"],["2026-11-10","Balipadyami / Deepavali"],["2026-11-27","Kanakadasa Jayanthi"],["2026-12-25","Christmas"],
-  ].map(([date,name]) => ({ date, name, status: "karnataka-official" as const, sourceLabel: "Karnataka DPAR 16 HHL 2025; 30-Mar amendment applied" }));
+    ["2026-01-15","Makara Sankranti"],
+    ["2026-01-26","Republic Day"],
+    ["2026-03-19","Ugadi"],
+    ["2026-03-21","Khutub-E-Ramzan (moon-sighting dependent)"],
+    ["2026-03-30","Mahavir Jayanti (revised from 31-Mar-2026)"],
+    ["2026-04-03","Good Friday"],
+    ["2026-04-14","Dr. B.R. Ambedkar Jayanthi"],
+    ["2026-04-20","Basava Jayanthi / Akshaya Tritiya"],
+    ["2026-05-01","May Day"],
+    ["2026-05-28","Bakrid (moon-sighting dependent)"],
+    ["2026-06-26","Last Day of Moharam (moon-sighting dependent)"],
+    ["2026-08-15","Independence Day"],
+    ["2026-08-26","Eid-Milad (moon-sighting dependent)"],
+    ["2026-09-14","Varasiddhi Vinayaka Vrata"],
+    ["2026-10-02","Gandhi Jayanti"],
+    ["2026-10-20","Mahanavami / Ayudhapooja"],
+    ["2026-10-21","Vijayadasami"],
+    ["2026-11-01","Karnataka Rajyotsava (falls on Sunday; no substitute holiday)"],
+    ["2026-11-10","Balipadyami / Deepavali"],
+    ["2026-11-27","Kanakadasa Jayanthi"],
+    ["2026-12-25","Christmas"],
+  ].map(([date, name]) => ({
+    date,
+    name,
+    status: ["2026-01-26","2026-08-15","2026-10-02"].includes(date) ? "national" as const : date === "2026-11-01" ? "karnataka-fixed" as const : "karnataka-official" as const,
+    sourceLabel: date === "2026-11-01"
+      ? "Karnataka DPAR 2026 notification notes Rajyotsava falls on Sunday and is not a separate general-holiday date; no substitute is listed"
+      : "Karnataka DPAR Notification No. DPAR 16 HHL 2025; Mahavir Jayanti amendment applied where relevant",
+  }));
 
+  // DoPT O.M. F. No. 12/2/2023-JCA dated 16-Jul-2026 lists 17 gazetted
+  // holidays for Central Government offices in Delhi/New Delhi. Two entries
+  // fall on 15-Aug-2027, so the calendar stores one combined date row.
   const central2027: HolidayEntry[] = [
-    {date:"2027-01-26",name:"Republic Day",status:"national",sourceLabel:"National fixed-date holiday"},
-    {date:"2027-03-10",name:"Id-ul-Fitr (moon-sighting dependent)",status:"central-reference",sourceLabel:"DoPT central gazetted holiday list 2027"},
-    {date:"2027-03-26",name:"Good Friday",status:"central-reference",sourceLabel:"DoPT central gazetted holiday list 2027"},
-    {date:"2027-04-19",name:"Mahavir Jayanti",status:"central-reference",sourceLabel:"DoPT central gazetted holiday list 2027"},
-    {date:"2027-05-17",name:"Id-ul-Zuha / Bakrid (moon-sighting dependent)",status:"central-reference",sourceLabel:"DoPT central gazetted holiday list 2027"},
-    {date:"2027-05-20",name:"Buddha Purnima",status:"central-reference",sourceLabel:"DoPT central gazetted holiday list 2027"},
-    {date:"2027-06-16",name:"Muharram (moon-sighting dependent)",status:"central-reference",sourceLabel:"DoPT central gazetted holiday list 2027"},
-    {date:"2027-08-15",name:"Independence Day / Milad-un-Nabi (moon-sighting dependent)",status:"national",sourceLabel:"National holiday and DoPT central list 2027"},
-    {date:"2027-10-02",name:"Gandhi Jayanti",status:"national",sourceLabel:"National fixed-date holiday"},
-    {date:"2027-10-09",name:"Mahanavami / Dussehra (central gazetted date)",status:"central-reference",sourceLabel:"DoPT central gazetted holiday list 2027; Karnataka observance may differ"},
-    {date:"2027-10-29",name:"Diwali / Deepavali",status:"central-reference",sourceLabel:"DoPT central gazetted holiday list 2027"},
-    {date:"2027-11-14",name:"Guru Nanak Jayanti",status:"central-reference",sourceLabel:"DoPT central gazetted holiday list 2027"},
-    {date:"2027-12-25",name:"Christmas",status:"central-reference",sourceLabel:"DoPT central gazetted holiday list 2027"},
+    {date:"2027-01-26",name:"Republic Day",status:"national",sourceLabel:"National fixed-date holiday; also in DoPT 2027 list"},
+    {date:"2027-03-10",name:"Id-ul-Fitr (moon-sighting dependent)",status:"central-reference",sourceLabel:"DoPT O.M. F. No. 12/2/2023-JCA dated 16-Jul-2026; date may change by local moon-sighting direction"},
+    {date:"2027-03-23",name:"Holi",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027"},
+    {date:"2027-03-26",name:"Good Friday",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027"},
+    {date:"2027-04-15",name:"Ram Navami",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027"},
+    {date:"2027-04-19",name:"Mahavir Jayanti",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027"},
+    {date:"2027-05-17",name:"Id-ul-Zuha / Bakrid (moon-sighting dependent)",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027; date may change"},
+    {date:"2027-05-20",name:"Buddha Purnima",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027"},
+    {date:"2027-06-16",name:"Muharram (moon-sighting dependent)",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027; date may change"},
+    {date:"2027-08-15",name:"Independence Day / Milad-un-Nabi (moon-sighting dependent)",status:"national",sourceLabel:"National fixed-date holiday; DoPT list also places Milad on the same date"},
+    {date:"2027-08-25",name:"Janmashtami (Vaishnav)",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027"},
+    {date:"2027-10-02",name:"Gandhi Jayanti",status:"national",sourceLabel:"National fixed-date holiday; also in DoPT 2027 list"},
+    {date:"2027-10-09",name:"Dussehra / Vijaya Dashami",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027; Karnataka date remains subject to State notification"},
+    {date:"2027-10-29",name:"Diwali / Deepavali",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027; Karnataka may notify Naraka Chaturdasi instead"},
+    {date:"2027-11-14",name:"Guru Nanak Jayanti",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027"},
+    {date:"2027-12-25",name:"Christmas",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027"},
   ];
 
   const karnatakaFixed2027: HolidayEntry[] = [
-    {date:"2027-05-01",name:"May Day",status:"karnataka-fixed",sourceLabel:"Karnataka statutory fixed holiday; state notification pending"},
-    {date:"2027-11-01",name:"Karnataka Rajyotsava",status:"karnataka-fixed",sourceLabel:"Karnataka statutory fixed holiday; state notification pending"},
+    {date:"2027-05-01",name:"May Day",status:"karnataka-fixed",sourceLabel:"Karnataka fixed-date observance; confirm the firm's declared holiday list"},
+    {date:"2027-11-01",name:"Karnataka Rajyotsava",status:"karnataka-fixed",sourceLabel:"Karnataka fixed-date observance; confirm the firm's declared holiday list"},
   ];
 
   const provisional2027: HolidayEntry[] = [
-    ["2027-01-14","Makara Sankranti"],["2027-03-06","Maha Shivaratri"],["2027-04-08","Ugadi"],["2027-04-14","Dr. B.R. Ambedkar Jayanthi"],
-    ["2027-05-09","Basava Jayanthi"],["2027-09-04","Ganesh Chaturthi"],["2027-09-29","Mahalaya Amavasye"],["2027-10-10","Vijayadashami"],
-    ["2027-10-15","Maharishi Valmiki Jayanthi"],["2027-10-30","Balipadyami / Deepavali holiday"],["2027-11-16","Kanakadasa Jayanthi"],
-  ].map(([date,name]) => ({date,name,status:"provisional" as const,sourceLabel:"Karnataka 2027 festival-date estimate; verify when State notification is issued"}));
+    {date:"2027-01-15",name:"Makara Sankranti (estimated)",status:"provisional",sourceLabel:"Karnataka festival-date estimate; verify against the 2027 State notification"},
+    {date:"2027-03-06",name:"Maha Shivaratri (estimated)",status:"provisional",sourceLabel:"Karnataka festival-date estimate; verify against the 2027 State notification"},
+    {date:"2027-04-07",name:"Ugadi (estimated)",status:"provisional",sourceLabel:"Karnataka festival-date estimate; verify against the 2027 State notification"},
+    {date:"2027-04-14",name:"Dr. B.R. Ambedkar Jayanthi (State holiday estimate)",status:"provisional",sourceLabel:"Fixed observance date; Karnataka 2027 general-holiday notification pending"},
+    {date:"2027-05-09",name:"Basava Jayanthi (estimated)",status:"provisional",sourceLabel:"Karnataka festival-date estimate; verify against the 2027 State notification"},
+    {date:"2027-09-04",name:"Ganesh Chaturthi / Varasiddhi Vinayaka Vrata (estimated)",status:"provisional",sourceLabel:"Karnataka festival-date estimate; verify against the 2027 State notification"},
+  ];
 
   return [...k2026,...central2027,...karnatakaFixed2027,...provisional2027].sort((a,b)=>a.date.localeCompare(b.date));
 }
 
+/** Merge defaults with saved edits while preserving dates a manager deliberately removed. */
 export function mergePresetHolidays(savedValue: unknown, presetVersion = 0): HolidayEntry[] {
   const saved = Array.isArray(savedValue)
-    ? savedValue.filter((item: any) => item && typeof item.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(item.date) && typeof item.name === "string") as HolidayEntry[]
+    ? savedValue.filter((item: any) => item && validDate(item.date) && typeof item.name === "string") as HolidayEntry[]
     : [];
-  if (presetVersion >= 3) return [...saved].sort((a,b)=>a.date.localeCompare(b.date));
+  if (presetVersion >= HOLIDAY_PRESET_VERSION) return [...saved].sort((a,b)=>a.date.localeCompare(b.date));
 
   const defaults = presetHolidays2026_2027();
   const defaultByDate = new Map(defaults.map(item=>[item.date,item]));
   const mergeSaved = (item:HolidayEntry, base?:HolidayEntry):HolidayEntry => base
-    ? {...base,...item,status:item.status||base.status,sourceLabel:item.sourceLabel||base.sourceLabel}
+    ? {
+        ...base,
+        ...item,
+        // Keep an explicit office confirmation, but refresh stale preset status/source metadata.
+        status: item.status === "office-confirmed" ? "office-confirmed" : (base.status || item.status),
+        sourceLabel: item.sourceLabel || base.sourceLabel,
+      }
     : item;
+
+  if (presetVersion === 3) {
+    const savedDates = new Set(saved.map(item=>item.date));
+    const removedLegacyDates = new Set<string>(LEGACY_V3_PRESET_DATES.filter(date=>!savedDates.has(date)));
+    const merged = new Map<string,HolidayEntry>();
+    for (const item of defaults) if (!removedLegacyDates.has(item.date)) merged.set(item.date,item);
+    for (const item of saved) merged.set(item.date,mergeSaved(item,defaultByDate.get(item.date)));
+    return [...merged.values()].sort((a,b)=>a.date.localeCompare(b.date));
+  }
 
   if (presetVersion === 2) {
     const savedDates = new Set(saved.map(item=>item.date));
