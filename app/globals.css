@@ -1277,3 +1277,22 @@ input,select,textarea{font-size:16px}
 .client-matter-progress b,.client-matter-progress small{display:block}
 .client-matter-progress small{margin-top:4px;color:var(--muted);font-size:12px}
 .client-matter-progress .round-status{font-weight:700;color:var(--accent)}
+
+/* Shared OfficeFlow form controls and responsive report/export fields */
+.app{--accent:#078b73;--accent-soft:rgba(7,139,115,.14);--ring:rgba(7,139,115,.18)}
+.app :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea){min-height:42px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);padding:10px 12px;font:inherit;line-height:1.35;transition:border-color .15s ease,box-shadow .15s ease,background-color .15s ease}
+.app :is(input[type="date"],input[type="time"]){min-width:0;min-height:42px;padding:8px 11px;line-height:1.2;color-scheme:light}
+.app.dark :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea){background:#14243a;border-color:#34465e;color:#edf4ff}
+.app.dark :is(input[type="date"],input[type="time"]){color-scheme:dark}
+.app :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea):focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
+.app :is(input,select,textarea):disabled{opacity:.65;cursor:not-allowed}
+.app :is(input[type="file"]){height:auto;min-height:42px;padding:7px}
+.app :is(.diary-fields,.diary-heading,.diary-compose-footer){min-width:0}
+.app .diary-fields{align-items:end;grid-template-columns:repeat(2,minmax(0,1fr))}
+.app .diary-fields>label{min-width:0}
+.app .diary-fields :is(input,select){width:100%;min-width:0}
+.app .diary-activity .diary-fields{grid-template-columns:repeat(3,minmax(0,1fr))}
+.app .diary-activity .diary-fields>.secondary-button{min-height:42px;align-self:end;white-space:normal}
+.app .diary-activity .diary-fields>.secondary-button:last-child{grid-column:auto}
+@media(max-width:850px){.app .diary-activity .diary-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.app .diary-activity .diary-fields>.secondary-button{width:100%}}
+@media(max-width:560px){.app .diary-fields,.app .diary-activity .diary-fields{grid-template-columns:minmax(0,1fr)}.app .diary-activity .diary-fields>.secondary-button{grid-column:1}.app :is(input[type="date"],input[type="time"]){width:100%}}
