@@ -67,8 +67,8 @@ test("Act-specific catalogues remain separate and partial saved 2025 lists are c
 test("tax-year and FY/AY validation enforces the correct Act format",()=>{
   assert.equal(normalizeTaxYear("2026"),"2026-27");
   assert.deepEqual(taxYearOptions(2026,1),["2026-27","2027-28"]);
-  assert.equal(validateActYears("Income-tax Act, 2025","","","","2026-27"),null);
-  assert.equal(validateActYears("Income-tax Act, 2025","","","","2025-26")!==null,true);
+  assert.equal(validateActYears("Income-tax Act, 2025","","","2026-27"),null);
+  assert.equal(validateActYears("Income-tax Act, 2025","","","2025-26")!==null,true);
   assert.equal(validateActYears("Income-tax Act, 1961","2025-26","2026-27",""),null);
   assert.equal(validateActYears("Income-tax Act, 1961","2025-26","2025-26","")!==null,true);
 });
