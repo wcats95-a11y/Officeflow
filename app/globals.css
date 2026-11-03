@@ -1064,3 +1064,140 @@ input,select,textarea{font-size:16px}
 .app .cmr-watermark{border-color:rgba(20,159,138,.25)!important}
 .app.dark .cmr-watermark{background:rgba(7,30,27,.9)!important;border-color:rgba(69,214,176,.25)!important;color:#a1c8ba!important}
 .app.dark .cmr-watermark b{color:#70e7c5!important}
+
+
+/* Calendar date popup refinement + persistent teal sidebar in every theme */
+.app .sidebar{
+  background:linear-gradient(180deg,#0b4b43 0%,#073b36 58%,#062f2c 100%)!important;
+  color:#eafff8!important;
+  border-right:1px solid rgba(132,231,201,.18)!important;
+  box-shadow:8px 0 30px rgba(4,43,37,.10);
+}
+.app .sidebar .brand,.app .sidebar .brand-light,
+.app .sidebar .workspace b,.app .sidebar .profile b{color:#effff9!important}
+.app .sidebar .brand-mark{background:linear-gradient(145deg,#51dfb5,#159b83)!important;color:#063d35!important}
+.app .sidebar .brand-light{opacity:.78}
+.app .sidebar .workspace{
+  background:rgba(230,255,247,.08)!important;
+  border-color:rgba(176,242,220,.18)!important;
+}
+.app .sidebar .workspace-icon{background:rgba(79,220,177,.17)!important;color:#8ff0d0!important}
+.app .sidebar .workspace small,.app .sidebar .profile small{color:#a8d9c9!important}
+.app .sidebar .nav-label{color:#91cbbb!important}
+.app .sidebar .nav-item{color:#c0e6da!important;border:1px solid transparent}
+.app .sidebar .nav-item:hover{background:rgba(220,255,245,.09)!important;color:#fff!important}
+.app .sidebar .nav-item.active{
+  background:linear-gradient(100deg,rgba(73,220,177,.22),rgba(73,220,177,.10))!important;
+  color:#8ff0d0!important;border-color:rgba(112,237,197,.2)!important;
+  box-shadow:inset 3px 0 0 #59e0b6;
+}
+.app .sidebar .nav-count{background:rgba(230,255,247,.13)!important;color:#eafff8!important}
+.app .sidebar .help-card{
+  background:linear-gradient(135deg,rgba(90,224,185,.18),rgba(220,255,245,.08))!important;
+  border:1px solid rgba(176,242,220,.16);color:#effff9!important;
+}
+.app .sidebar .help-card p{color:#b4dfd1!important}
+.app .sidebar .help-symbol{color:#7ce9c5!important}
+.app .sidebar .profile{border-color:rgba(176,242,220,.18)!important}
+.app .sidebar .profile .icon-button{color:#d7f7eb!important}
+.app .sidebar .avatar.owner{background:#b5f4df!important;color:#075447!important}
+@media(max-width:850px){
+  .app .sidebar{
+    background:linear-gradient(180deg,#0b4b43 0%,#073b36 58%,#062f2c 100%)!important;
+    border-color:rgba(132,231,201,.18)!important;
+  }
+}
+
+/* Give the selected-date dialog a compact, balanced hierarchy */
+.app .calendar-date-popover{
+  width:min(590px,calc(100vw - 36px))!important;
+  max-height:min(72vh,650px)!important;
+  padding:25px 27px!important;
+  border-radius:22px!important;
+  background:linear-gradient(145deg,#f8fffc,#eaf7f1)!important;
+  color:#153b35!important;
+  border:1px solid #c6e5d8!important;
+  box-shadow:0 28px 90px rgba(4,42,35,.28)!important;
+}
+.app.dark .calendar-date-popover{
+  background:linear-gradient(145deg,#103b32,#092b26)!important;
+  color:#eafff8!important;
+  border-color:rgba(112,224,185,.26)!important;
+  box-shadow:0 28px 90px rgba(0,0,0,.48)!important;
+}
+.app .calendar-date-popover .calendar-detail-heading{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:18px;padding:0 0 18px;margin:0 0 17px;
+  border-bottom:1px solid #d5eae1;
+}
+.app.dark .calendar-date-popover .calendar-detail-heading{border-color:rgba(157,224,197,.17)}
+.app .calendar-date-popover .dashboard-kicker{
+  display:inline-flex;align-items:center;gap:7px;
+  color:#16866f!important;font-size:10px;font-weight:800;
+  letter-spacing:1.7px;margin-bottom:8px;
+}
+.app.dark .calendar-date-popover .dashboard-kicker{color:#75dfbd!important}
+.app .calendar-date-popover .dashboard-kicker:before{
+  content:"";width:6px;height:6px;border-radius:50%;background:#19a887;
+  box-shadow:0 0 0 4px rgba(25,168,135,.12);
+}
+.app .calendar-date-popover .calendar-detail-heading h3{
+  margin:0!important;font:800 clamp(19px,3vw,23px) Manrope,Inter,sans-serif!important;
+  letter-spacing:-.7px;color:#153b35!important;line-height:1.25;
+}
+.app.dark .calendar-date-popover .calendar-detail-heading h3{color:#effff8!important}
+.app .calendar-date-popover .calendar-popover-actions{gap:9px;flex-shrink:0}
+.app .calendar-date-popover .heading-count{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:30px;padding:0 11px;border-radius:999px;
+  background:#d9f2e8!important;color:#087b67!important;
+  border:1px solid #bde4d4;font-size:11px;font-weight:750;white-space:nowrap;
+}
+.app.dark .calendar-date-popover .heading-count{
+  background:rgba(69,214,176,.14)!important;color:#8aefd0!important;
+  border-color:rgba(112,224,185,.22);
+}
+.app .calendar-date-popover .calendar-popover-actions .icon-button{
+  display:grid;place-items:center;width:36px;height:36px;padding:0;
+  border-radius:11px;background:#e5f3ed!important;color:#286858!important;
+  border:1px solid #c8e3d7!important;font-size:17px;
+}
+.app.dark .calendar-date-popover .calendar-popover-actions .icon-button{
+  background:rgba(224,255,245,.08)!important;color:#d8f8eb!important;
+  border-color:rgba(157,224,197,.2)!important;
+}
+.app .calendar-date-popover .calendar-empty{
+  display:flex;align-items:center;gap:14px;
+  margin:0!important;padding:17px 18px!important;
+  border:1px dashed #b9dccc;border-radius:15px;
+  background:rgba(217,242,232,.48)!important;
+  color:#52786c!important;font-size:13px;line-height:1.55;
+}
+.app .calendar-date-popover .calendar-empty:before{
+  content:"✓";display:grid;place-items:center;flex:0 0 38px;height:38px;
+  border-radius:12px;background:#d5f1e5;color:#12856c;font-size:19px;font-weight:800;
+}
+.app.dark .calendar-date-popover .calendar-empty{
+  background:rgba(69,214,176,.07)!important;
+  border-color:rgba(112,224,185,.22);color:#b9d9ce!important;
+}
+.app.dark .calendar-date-popover .calendar-empty:before{
+  background:rgba(69,214,176,.15);color:#82e8c7;
+}
+.app .calendar-date-popover .calendar-client-row,
+.app .calendar-date-popover .calendar-official-row{
+  border-color:#d5eae1!important;border-radius:13px;margin:7px 0;
+  padding:13px!important;
+}
+.app.dark .calendar-date-popover .calendar-client-row,
+.app.dark .calendar-date-popover .calendar-official-row{
+  border-color:rgba(157,224,197,.16)!important;
+}
+@media(max-width:560px){
+  .app .calendar-date-popover{width:calc(100vw - 22px)!important;padding:19px!important}
+  .app .calendar-date-popover .calendar-detail-heading{align-items:flex-start;gap:10px}
+  .app .calendar-date-popover .calendar-detail-heading h3{max-width:220px}
+  .app .calendar-date-popover .heading-count{font-size:10px;padding:0 8px}
+  .app .calendar-date-popover .calendar-popover-actions .icon-button{width:34px;height:34px}
+  .app .calendar-date-popover .calendar-empty{font-size:12px;padding:14px!important}
+}
