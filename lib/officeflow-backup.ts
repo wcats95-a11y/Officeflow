@@ -1,4 +1,4 @@
-const SUPPORTED_BACKUP_SCHEMA_VERSIONS = new Set([1, 2, 2.1, 2.5, 2.6, 2.7]);
+const MAX_SUPPORTED_BACKUP_SCHEMA_VERSION = 2.7;
 
 function isRecord(value: unknown): value is Record<string, any> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -18,14 +18,14 @@ function optionalArray(data: Record<string, any>, key: string, validate: (item:a
 
 /** Strictly validates a backup before any live workspace state is replaced. */
 export function isValidOfficeFlowBackup(value: unknown): boolean {
-  if (!isRecord(value) || !SUPPORTED_BACKUP_SCHEMA_VERSIONS.has(value.schemaVersion)) return false;
+  if (!isRecord(value) || typeof value.schemaVersion!=="number" || value.schemaVersion<1 || value.schemaVersion>MAX_SUPPORTED_BACKUP_SCHEMA_VERSION) return false;
   if (!Array.isArray(value.tasks) || !value.tasks.every((task:any) =>
     isRecord(task) && typeof task.id === "string" && typeof task.title === "string" &&
     Array.isArray(task.juniors) && task.juniors.every((name:any)=>typeof name==="string")
   )) return false;
   if (!isRecord(value.juniorDirectory) || Object.values(value.juniorDirectory).some(name=>typeof name!=="string")) return false;
   if (!Array.isArray(value.clientDirectory) || !value.clientDirectory.every((client:any)=>isRecord(client)&&typeof client.name==="string")) return false;
-  if (!optionalArray(value,"clientGroups",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.name==="string"&&Array.isArray(item.clientNames))) return false;
+  if (!optionalArray(value,"clientGroups",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.name==="string"&&Array.isArray(item.clientNames)&&item.clientNames.every((name:any)=>typeof name==="string"))) return false;
   if (!optionalArray(value,"matterRounds",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.matterId==="string"&&typeof item.roundType==="string"&&Number.isFinite(item.sequenceNumber)&&Array.isArray(item.attachments))) return false;
   if (!optionalArray(value,"matterTaskTypes",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.matterType==="string"&&typeof item.taskType==="string"&&(item.act==="Income-tax Act, 1961"||item.act==="Income-tax Act, 2025")&&typeof item.active==="boolean"&&Number.isFinite(item.sortOrder))) return false;
   if (!optionalArray(value,"matterTypeNames",(item:any)=>typeof item==="string")) return false;
