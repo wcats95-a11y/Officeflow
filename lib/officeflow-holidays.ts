@@ -1,4 +1,4 @@
-export type HolidayStatus = "karnataka-official" | "national" | "karnataka-fixed" | "central-reference" | "provisional";
+export type HolidayStatus = "karnataka-official" | "national" | "karnataka-fixed" | "central-reference" | "provisional" | "office-confirmed";
 export type HolidayEntry = { date: string; name: string; status?: HolidayStatus; sourceLabel?: string };
 
 const LEGACY_V2_PRESET_DATES = [
@@ -7,7 +7,7 @@ const LEGACY_V2_PRESET_DATES = [
 ] as const;
 
 export const HOLIDAY_PRESET_NOTICE =
-  "2026 uses Karnataka's DPAR 16 HHL 2025 general-holiday notification, updated for the 30-Mar-2026 Mahavir Jayanti amendment. The 2027 list combines the DoPT central gazetted list and Karnataka's fixed statutory dates. Karnataka's own 2027 festival-holiday notification was not yet published as at 3-Nov-2026; regional festival estimates are marked provisional. Confirm them against your firm's declared holiday list before relying on them.";
+  "2026 uses Karnataka's DPAR general-holiday notification, updated for the 30-Mar-2026 Mahavir Jayanti amendment. For 2027, the Karnataka State general-holiday notification was not yet published as at 3-Nov-2026: the calendar therefore combines national/fixed dates, the DoPT central reference list and clearly marked Karnataka festival estimates. Central and provisional dates are not automatically holidays for a private office. Under Karnataka's holiday law, private establishments generally declare the five fixed holidays plus five festival holidays selected in consultation with employees. Use Confirm for office only for dates your firm actually observes; the firm's declared holiday list governs.";
 
 export function presetHolidays2026_2027(): HolidayEntry[] {
   const k2026: HolidayEntry[] = [
