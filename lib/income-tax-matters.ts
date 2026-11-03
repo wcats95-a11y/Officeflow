@@ -62,12 +62,17 @@ export function starterTaskTypes():MatterTaskType[]{
 
 /** Union the full built-in catalogue with saved customisations; saved rows win by stable ID. */
 export function mergeStarterTaskTypes(savedValue: unknown): MatterTaskType[] {
-  const saved = Array.isArray(savedValue) ? savedValue.filter((item:any)=>
-    item && typeof item.id==="string" && typeof item.matterType==="string" &&
-    typeof item.taskType==="string" &&
-    (item.act==="Income-tax Act, 1961"||item.act==="Income-tax Act, 2025") &&
-    typeof item.active==="boolean" && Number.isFinite(item.sortOrder)
-  ) as MatterTaskType[] : [];
+  // Pre-Act workspaces did not persist an Act, active flag or sort order.
+  // Preserve those custom templates under the 1961 catalogue while adding
+  // the new 2025 starter catalogue; do not let an older payload hide it.
+  const saved = Array.isArray(savedValue) ? savedValue
+    .filter((item:any)=>item && typeof item.id==="string" && typeof item.matterType==="string" && typeof item.taskType==="string")
+    .map((item:any,index:number)=>({
+      ...item,
+      act: item.act==="Income-tax Act, 2025" ? "Income-tax Act, 2025" as const : "Income-tax Act, 1961" as const,
+      active: typeof item.active==="boolean" ? item.active : true,
+      sortOrder: Number.isFinite(item.sortOrder) ? item.sortOrder : index,
+    })) as MatterTaskType[] : [];
   const merged = new Map<string,MatterTaskType>();
   for(const item of starterTaskTypes()) merged.set(item.id,item);
   for(const item of saved) merged.set(item.id,item);
