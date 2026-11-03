@@ -66,7 +66,7 @@ export function isValidOfficeFlowBackup(value: unknown): boolean {
   if ("clientDirectory" in value && (!Array.isArray(value.clientDirectory) || !value.clientDirectory.every((client:any)=>isRecord(client)&&typeof client.name==="string"&&optionalString(client,"pan")&&optionalString(client,"entityType")&&optionalString(client,"groupId")))) return false;
   if (!optionalArray(value,"clientGroups",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.name==="string"&&Array.isArray(item.clientNames)&&item.clientNames.every((name:any)=>typeof name==="string"))) return false;
   if (!optionalArray(value,"matterRounds",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.matterId==="string"&&typeof item.roundType==="string"&&Number.isFinite(item.sequenceNumber)&&Array.isArray(item.attachments)&&item.attachments.every((a:any)=>isRecord(a)&&typeof a.name==="string"&&optionalString(a,"dataUrl")&&optionalString(a,"url")))) return false;
-  if (!optionalArray(value,"matterTaskTypes",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.matterType==="string"&&typeof item.taskType==="string"&&ACTS.has(item.act)&&typeof item.active==="boolean"&&Number.isFinite(item.sortOrder))) return false;
+  if (!optionalArray(value,"matterTaskTypes",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.matterType==="string"&&typeof item.taskType==="string"&&(!("act" in item)||ACTS.has(item.act))&&(!("active" in item)||typeof item.active==="boolean")&&(!("sortOrder" in item)||Number.isFinite(item.sortOrder)))) return false;
   if (!optionalArray(value,"matterTypeNames",(item:any)=>typeof item==="string")) return false;
   if (!optionalArray(value,"compOffEntries",(item:any)=>isRecord(item)&&typeof item.id==="string"&&(item.type==="earned"||item.type==="used")&&validDate(item.date)&&optionalString(item,"notes")&&optionalString(item,"earnedEntryId")&&(!("expiresAt" in item)||validDate(item.expiresAt)))) return false;
   if (!optionalArray(value,"compOffHolidays",(item:any)=>isRecord(item)&&validDate(item.date)&&typeof item.name==="string"&&(!("status" in item)||HOLIDAY_STATUSES.has(item.status))&&optionalString(item,"sourceLabel"))) return false;
@@ -103,6 +103,7 @@ export function migrateOfficeFlowBackup(value: unknown): Record<string, any> {
     activity:Array.isArray(task.activity)?task.activity:[],
   }));
   const presetVersion=Number(data.compOffHolidayPresetVersion||0);
+  const legacyTaskTypes=Array.isArray(data.matterTaskTypes)?data.matterTaskTypes.map((item:any,index:number)=>({...item,act:ACTS.has(item.act)?item.act:"Income-tax Act, 1961",active:typeof item.active==="boolean"?item.active:true,sortOrder:Number.isFinite(item.sortOrder)?item.sortOrder:index})):[];
   return {
     ...data,
     schemaVersion:OFFICEFLOW_BACKUP_SCHEMA_VERSION,
@@ -111,7 +112,7 @@ export function migrateOfficeFlowBackup(value: unknown): Record<string, any> {
     clientDirectory:Array.isArray(data.clientDirectory)?data.clientDirectory:[],
     clientGroups:Array.isArray(data.clientGroups)?data.clientGroups:[],
     matterRounds:Array.isArray(data.matterRounds)?data.matterRounds:[],
-    matterTaskTypes:mergeStarterTaskTypes(data.matterTaskTypes),
+    matterTaskTypes:mergeStarterTaskTypes(legacyTaskTypes),
     matterTypeNames:mergeMatterTypeNames(data.matterTypeNames),
     compOffEntries:normalizeCompOffEntries(data.compOffEntries),
     compOffHolidays:mergePresetHolidays(data.compOffHolidays,presetVersion),
