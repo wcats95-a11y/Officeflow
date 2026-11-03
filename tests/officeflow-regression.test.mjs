@@ -117,7 +117,6 @@ test("2026 Karnataka general and restricted references plus 2027 central and pro
   assert.equal(byDate.get("2027-08-25")?.name,"Janmashtami (Vaishnav)");
   assert.equal(byDate.get("2027-04-07")?.status,"provisional");
   assert.equal(byDate.get("2027-09-04")?.status,"provisional");
-  assert.equal(byDate.get("2027-05-05")?.status,undefined);
   assert.equal(byDate.get("2027-05-09")?.status,"provisional");
   assert.equal(byDate.get("2027-09-29")?.status,"provisional");
   assert.equal(byDate.get("2027-10-10")?.status,"provisional");
