@@ -55,6 +55,11 @@ export function mergePresetHolidays(savedValue: unknown, presetVersion = 0): Hol
   if (presetVersion >= 3) return [...saved].sort((a,b)=>a.date.localeCompare(b.date));
 
   const defaults = presetHolidays2026_2027();
+  const defaultByDate = new Map(defaults.map(item=>[item.date,item]));
+  const mergeSaved = (item:HolidayEntry, base?:HolidayEntry):HolidayEntry => base
+    ? {...base,...item,status:item.status||base.status,sourceLabel:item.sourceLabel||base.sourceLabel}
+    : item;
+
   if (presetVersion === 2) {
     const savedDates = new Set(saved.map(item=>item.date));
     const removedLegacyDates = new Set(LEGACY_V2_PRESET_DATES.filter(date=>!savedDates.has(date)));
@@ -68,13 +73,13 @@ export function mergePresetHolidays(savedValue: unknown, presetVersion = 0): Hol
     for (const item of saved) {
       if (item.date === "2026-03-31") continue;
       if (legacyDates.has(item.date) && removedLegacyDates.has(item.date)) continue;
-      merged.set(item.date,item);
+      merged.set(item.date,mergeSaved(item,defaultByDate.get(item.date)));
     }
     return [...merged.values()].sort((a,b)=>a.date.localeCompare(b.date));
   }
 
   const merged = new Map<string,HolidayEntry>();
   for (const item of defaults) merged.set(item.date,item);
-  for (const item of saved) merged.set(item.date,item);
+  for (const item of saved) merged.set(item.date,mergeSaved(item,defaultByDate.get(item.date)));
   return [...merged.values()].sort((a,b)=>a.date.localeCompare(b.date));
 }
