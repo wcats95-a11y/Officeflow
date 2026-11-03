@@ -853,3 +853,27 @@ input,select,textarea{font-size:16px}
   .app .cmr-watermark{right:10px;bottom:8px;padding:6px 9px;font-size:9px}
   .app .junior-multi-select{min-height:92px}
 }
+
+
+/* Multi-junior assignment picker */
+.app .junior-picker-field{display:flex;flex-direction:column;gap:7px;min-width:0;margin-bottom:14px}
+.app .junior-picker-field .field-label{font-size:11px;font-weight:700;color:var(--muted)}
+.app .junior-picker{
+  display:flex;flex-wrap:wrap;gap:7px;min-height:42px;
+  padding:9px;border:1px solid var(--line);border-radius:12px;
+  background:var(--surface-2);
+}
+.app .junior-option{
+  display:inline-flex!important;flex-direction:row!important;align-items:center;gap:7px!important;
+  margin:0!important;padding:7px 10px;border:1px solid var(--line);
+  border-radius:999px;background:var(--surface);color:var(--ink)!important;
+  font-size:11px!important;font-weight:600!important;cursor:pointer;
+  transition:background .18s,border-color .18s,transform .18s;
+}
+.app .junior-option:hover{border-color:var(--accent);transform:translateY(-1px)}
+.app .junior-option:has(input:checked){background:var(--purple-soft);border-color:var(--accent);color:var(--accent)!important}
+.app .junior-option input{width:14px!important;height:14px;margin:0;accent-color:var(--accent)}
+.app.dark .junior-picker{background:#14243a;border-color:#34465e}
+.app.dark .junior-option{background:#1a2c43;border-color:#34465e;color:#eaf2fc!important}
+.app.dark .junior-option:has(input:checked){background:rgba(45,212,191,.15);border-color:#2dd4bf;color:#7ceadd!important}
+.app.dark .junior-picker-field .field-label{color:#c1d0e2}
