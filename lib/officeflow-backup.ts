@@ -1,6 +1,6 @@
-import { mergeStarterTaskTypes, mergeMatterTypeNames, normalizeTaxYear } from "./income-tax-matters";
-import { normalizeCompOffEntries } from "./comp-off";
-import { mergePresetHolidays, HOLIDAY_PRESET_VERSION } from "./officeflow-holidays";
+import { mergeStarterTaskTypes, mergeMatterTypeNames, normalizeTaxYear } from "./income-tax-matters.ts";
+import { normalizeCompOffEntries } from "./comp-off.ts";
+import { mergePresetHolidays, HOLIDAY_PRESET_VERSION } from "./officeflow-holidays.ts";
 
 export const OFFICEFLOW_BACKUP_SCHEMA_VERSION = 2.8;
 const MAX_SUPPORTED_BACKUP_SCHEMA_VERSION = OFFICEFLOW_BACKUP_SCHEMA_VERSION;
