@@ -170,7 +170,7 @@ export function normalizeTaskActYearFields<T extends {applicableAct?:string;fina
 ):T & {applicableAct:IncomeTaxAct;financialYear:string;assessmentYear:string;taxYear:string}{
   const applicableAct:IncomeTaxAct=task.applicableAct==="Income-tax Act, 2025"?"Income-tax Act, 2025":"Income-tax Act, 1961";
   if(applicableAct==="Income-tax Act, 2025"){
-    return {...task,applicableAct,financialYear:"",assessmentYear:"",taxYear:normalizeTaxYear(task.taxYear||"")||""};
+    return {...task,applicableAct,financialYear:"",assessmentYear:"",taxYear:normalizeTaxYear(task.taxYear||"")||(typeof task.taxYear==="string"?task.taxYear:"")};
   }
   return {...task,applicableAct,financialYear:task.financialYear||"",assessmentYear:task.assessmentYear||"",taxYear:""};
 }

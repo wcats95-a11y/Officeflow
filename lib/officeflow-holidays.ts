@@ -36,8 +36,14 @@ function validDate(value: unknown): value is string {
 export function inferHolidayPresetVersion(savedValue: unknown): number {
   if (!Array.isArray(savedValue)) return 0;
   const savedDates = new Set(savedValue.filter((item:any)=>item && validDate(item.date)).map((item:any)=>item.date));
-  const legacyV2Matches = LEGACY_V2_PRESET_DATES.filter(date=>savedDates.has(date)).length;
-  return legacyV2Matches >= 5 ? 2 : 0;
+  const earlyFixedOnlyDates = new Set([
+    "2026-01-26","2026-05-01","2026-08-15","2026-10-02","2026-11-01",
+    "2027-01-26","2027-05-01","2027-08-15","2027-10-02","2027-11-01",
+  ]);
+  const isEarlyFixedOnly = [...savedDates].every(date=>earlyFixedOnlyDates.has(date));
+  if(isEarlyFixedOnly)return 0;
+  const hasKnownV2Preset = LEGACY_V2_PRESET_DATES.some(date=>savedDates.has(date)&&!earlyFixedOnlyDates.has(date));
+  return hasKnownV2Preset ? 2 : 0;
 }
 
 export function presetHolidays2026_2027(): HolidayEntry[] {

@@ -260,10 +260,14 @@ test("Act-specific task year fields never leak across Acts", () => {
   assert.equal(act2025.financialYear,"");assert.equal(act2025.assessmentYear,"");assert.equal(act2025.taxYear,"2026-27");
   const act1961=normalizeTaskActYearFields({applicableAct:"Income-tax Act, 1961",financialYear:"2025-26",assessmentYear:"2026-27",taxYear:"2026-27"});
   assert.equal(act1961.financialYear,"2025-26");assert.equal(act1961.assessmentYear,"2026-27");assert.equal(act1961.taxYear,"");
+  const invalid2025=normalizeTaskActYearFields({applicableAct:"Income-tax Act, 2025",taxYear:"2025-26"});
+  assert.equal(invalid2025.taxYear,"2025-26");
 });
 test("legacy unversioned five-date holiday arrays get expanded presets; v2 removals remain removed", () => {
-  const early=["2026-01-26","2026-05-01","2026-08-15","2026-10-02","2026-11-01"].map(date=>({date,name:date}));
+  const early=["2026-01-26","2026-05-01","2026-08-15","2026-10-02","2026-11-01","2027-01-26","2027-05-01","2027-08-15","2027-10-02","2027-11-01"].map(date=>({date,name:date}));
   assert.equal(inferHolidayPresetVersion(early),0);
+  const earlyWithCustom=[...early,{date:"2026-12-31",name:"Office holiday"}];
+  assert.equal(inferHolidayPresetVersion(earlyWithCustom),0);
   const migratedEarly=mergePresetHolidays(early,inferHolidayPresetVersion(early));
   assert.ok(migratedEarly.some(x=>x.date==="2026-01-01"&&x.status==="restricted-reference"));
   assert.ok(migratedEarly.some(x=>x.date==="2027-03-10"&&x.status==="central-reference"));
