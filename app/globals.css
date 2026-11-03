@@ -1272,3 +1272,8 @@ input,select,textarea{font-size:16px}
 .round-item select,.round-item input{max-width:220px}
 .overdue-round{display:inline-block;color:#c44747;font-weight:700;font-size:12px;margin:6px}
 @media(max-width:640px){.round-toolbar{display:grid;grid-template-columns:1fr}.round-item label{display:flex;min-width:100%;margin-right:0}.round-item select,.round-item input{max-width:none;width:100%}}
+
+.client-matter-progress{margin:8px 0;padding:9px 11px;border-left:3px solid var(--accent);background:var(--surface-2,var(--surface));border-radius:8px}
+.client-matter-progress b,.client-matter-progress small{display:block}
+.client-matter-progress small{margin-top:4px;color:var(--muted);font-size:12px}
+.client-matter-progress .round-status{font-weight:700;color:var(--accent)}
