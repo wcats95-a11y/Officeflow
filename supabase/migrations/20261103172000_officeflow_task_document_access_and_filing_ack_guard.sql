@@ -36,8 +36,7 @@ begin
   v_payload := jsonb_set(v_payload,'{auditLog}','[]'::jsonb,true);
   return jsonb_build_object('payload',v_payload,'role',v_role,'display_name',v_display_name,'workspace_owner_id',v_owner,'members','[]'::jsonb,'email',coalesce(v_email,''));
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION officeflow_private.officeflow_save_workspace_impl(p_payload jsonb)
  RETURNS jsonb
@@ -144,4 +143,4 @@ begin
   update public.officeflow_workspace_state set payload=v_next_payload,schema_version=greatest(schema_version,1),updated_at=now() where owner_id=v_owner;
   return jsonb_build_object('ok',true,'role',v_role);
 end;
-$function$
+$function$;
