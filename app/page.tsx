@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../supabaseClient";
-import { DEFAULT_MATTER_TYPES, starterTaskTypes, mergeStarterTaskTypes, mergeMatterTypeNames, yearOptions, financialYearOptions, taxYearOptions, normalizeTaxYear, validateActYears, assessmentYearFromFinancialYear, detectIncomeTaxYears, type ClientGroup, type MatterTaskType, type MatterRound, roundStatusFromTaskStatus, nextRoundSequence, duplicateRound } from "../lib/income-tax-matters";
+import { DEFAULT_MATTER_TYPES, starterTaskTypes, mergeStarterTaskTypes, mergeMatterTypeNames, yearOptions, financialYearOptions, taxYearOptions, normalizeTaxYear, validateActYears, assessmentYearFromFinancialYear, detectIncomeTaxYears, isIncomeTaxTaskLike, type ClientGroup, type MatterTaskType, type MatterRound, roundStatusFromTaskStatus, nextRoundSequence, duplicateRound } from "../lib/income-tax-matters";
 import { compOffExpiryDate, getCompOffAvailableEntries, normalizeCompOffEntries, hasLinkedCompOffUsage, isValidCompOffUsageDate, type CompOffEntry } from "../lib/comp-off";
 import { presetHolidays2026_2027, mergePresetHolidays, HOLIDAY_PRESET_NOTICE, type HolidayEntry } from "../lib/officeflow-holidays";
 import { isValidOfficeFlowBackup } from "../lib/officeflow-backup";
@@ -238,7 +238,7 @@ export default function Home() {
  },[session?.user?.id,cloudHydrated,cloudReady,workspaceRole,tasks,juniorDirectory,clientDirectory,clientGroups,matterTaskTypes,matterTypeNames,matterRounds,compOffEntries,compOffHolidays,profileDisplayName,meetings,auditLog,dark,remindersEnabled]);
  useEffect(()=>{const updateClock=()=>setCurrentDateTime(new Date().toLocaleString("en-IN",{timeZone:"Asia/Kolkata",dateStyle:"medium",timeStyle:"medium"}));updateClock();const timer=window.setInterval(updateClock,1000);return()=>window.clearInterval(timer)},[]);
  useEffect(()=>{const handler=(e:KeyboardEvent)=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();document.querySelector<HTMLInputElement>('[aria-label="Search"]')?.focus()}if((e.metaKey||e.ctrlKey)&&e.shiftKey&&e.key.toLowerCase()==="n"){e.preventDefault();setEditingId(null);setShowAdd(true)}};window.addEventListener("keydown",handler);return()=>window.removeEventListener("keydown",handler)},[]);
- const isIncomeTaxTask=(t:Task)=>{const x=[t.taskType,t.matterType,t.applicableAct,t.category,t.title,t.description].filter(Boolean).join(" ").toLowerCase();if(/\b(gst|goods and services tax)\b/.test(x))return false;return /income tax|income-tax|direct tax|\bitr\b|\bpan\b|assessment|reassessment|faceless|tax audit|advance tax|capital gains|\btds\b|\btcs\b|withholding tax|tax deduction|tax collection|section 14[38]|section 14[89]|section 15[456]|section 26as|form 16|form 26|tax notice|income-tax act/.test(x)||t.taskType==="Income tax";};
+ const isIncomeTaxTask=(t:Task)=>isIncomeTaxTaskLike(t);
  const complete=(t:Task)=>["Filed / completed","Done","Closed"].includes(t.status);
  const filtered = useMemo(()=>tasks.filter(t=>{
   const q=query.toLowerCase();
