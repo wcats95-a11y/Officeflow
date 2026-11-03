@@ -76,6 +76,16 @@ export function mergeStarterTaskTypes(savedValue: unknown): MatterTaskType[] {
   );
 }
 
+/** Return only active task templates for the selected Act and matter type. Built-ins are unioned with saved customisations so an older workspace cannot hide a newer Act catalogue. */
+export function getMatterTaskTypesForAct(savedValue: unknown, matterType: string, act: string): MatterTaskType[] {
+  const selectedAct: IncomeTaxAct = act === "Income-tax Act, 2025" ? "Income-tax Act, 2025" : "Income-tax Act, 1961";
+  const selectedMatter = String(matterType || "").trim();
+  if (!selectedMatter) return [];
+  return mergeStarterTaskTypes(savedValue)
+    .filter(item => item.active && item.act === selectedAct && item.matterType === selectedMatter)
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.taskType.localeCompare(b.taskType));
+}
+
 export function mergeMatterTypeNames(savedValue: unknown): string[] {
   const saved=Array.isArray(savedValue)?savedValue.filter((name:any)=>typeof name==="string"&&name.trim()).map((name:string)=>name.trim()):[];
   return [...new Set([...DEFAULT_MATTER_TYPES,...saved])];
