@@ -877,3 +877,22 @@ input,select,textarea{font-size:16px}
 .app.dark .junior-option{background:#1a2c43;border-color:#34465e;color:#eaf2fc!important}
 .app.dark .junior-option:has(input:checked){background:rgba(45,212,191,.15);border-color:#2dd4bf;color:#7ceadd!important}
 .app.dark .junior-picker-field .field-label{color:#c1d0e2}
+
+
+/* Calendar date details open as an in-calendar modal instead of extending the page */
+.app .calendar-popover-backdrop{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:22px;background:rgba(2,8,18,.72);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+.app .calendar-date-popover{width:min(620px,100%);max-height:min(78vh,760px);overflow:auto;background:#101b2b!important;border:1px solid rgba(148,180,210,.24);border-radius:20px;padding:22px;box-shadow:0 28px 100px rgba(0,0,0,.6);color:#edf4ff}
+.app .calendar-popover-actions{display:flex;align-items:center;gap:10px}
+.app .calendar-popover-actions .icon-button{background:#1a2b42;color:#eaf2fc;border:1px solid rgba(148,180,210,.2)}
+.app .calendar-date-popover .calendar-detail-heading h3{color:#f3f7ff}
+.app .calendar-date-popover .calendar-client-row{color:#eaf2fc;border-color:rgba(148,180,210,.18)}
+.app .calendar-date-popover .calendar-client-info small,.app .calendar-date-popover .calendar-empty{color:#a9bad0}
+.app.dark{--bg:#050a12!important;--surface:#0d1624!important;--surface-2:#111f30!important;--surface-3:#182a3e!important;--ink:#f3f7ff!important;--muted:#a9b8cc!important;--line:rgba(157,184,214,.18)!important;background:#050a12!important;color:#f3f7ff!important}
+.app.dark .main-area,.app.dark .content{background:transparent!important;color:#f3f7ff!important}
+.app.dark .sidebar,.app.dark .topbar{background:#0b1421!important;border-color:rgba(157,184,214,.18)!important}
+.app.dark .dashboard-card,.app.dark .stat-card,.app.dark .task-panel,.app.dark .entity-card,.app.dark .directory-form,.app.dark .directory-row,.app.dark .calendar-card,.app.dark .statutory-calendar,.app.dark .kanban-card,.app.dark .kanban-column{background:#0d1928!important;color:#f3f7ff!important;border-color:rgba(157,184,214,.18)!important}
+.app.dark .task-table-head,.app.dark .month-weekday{background:#101f31!important;color:#a9b8cc!important}
+.app.dark .month-day,.app.dark .calendar-schedule-controls{background:#0d1928!important;color:#f3f7ff!important}
+.app.dark .month-day.outside-month{background:#091321!important;color:#71839b!important}
+.app.dark .calendar-date-details{background:#0d1928!important;color:#f3f7ff!important}
+@media(max-width:560px){.app .calendar-popover-backdrop{padding:10px}.app .calendar-date-popover{padding:16px;max-height:86vh}}
