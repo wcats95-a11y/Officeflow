@@ -1,4 +1,4 @@
-name: OfficeFlow regression tests
+name: OfficeFlow regression and build
 
 on:
   push:
@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  regression:
+  regression-and-build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -22,5 +22,7 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 22
-      - name: Run OfficeFlow regression suite
-        run: npm test
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run regression suite and production build
+        run: npm run build
