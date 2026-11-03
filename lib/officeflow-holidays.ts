@@ -1,4 +1,4 @@
-export type HolidayStatus = "karnataka-official" | "national" | "karnataka-fixed" | "central-reference" | "provisional" | "office-confirmed";
+export type HolidayStatus = "karnataka-official" | "national" | "karnataka-fixed" | "central-reference" | "restricted-reference" | "provisional" | "office-confirmed";
 export type HolidayEntry = { date: string; name: string; status?: HolidayStatus; sourceLabel?: string };
 
 export const HOLIDAY_PRESET_VERSION = 4;
@@ -16,7 +16,7 @@ const LEGACY_V3_PRESET_DATES = [
 ] as const;
 
 export const HOLIDAY_PRESET_NOTICE =
-  "2026 uses Karnataka DPAR Notification No. DPAR 16 HHL 2025 dated 17-Nov-2025, with Mahavir Jayanti revised to 30-Mar-2026. For 2027, Karnataka's State general-holiday notification had not been published as at 3-Nov-2026. The calendar therefore includes the DoPT 2027 central-government gazetted list as a reference, Karnataka fixed-date holidays, and clearly marked provisional Karnataka festival estimates. Central-reference and provisional dates are not automatically holidays for a private office. Confirm your firm's declared holiday list; moon-sighting dates may change.";
+  "2026 includes Karnataka DPAR general holidays plus a separately labelled restricted-holiday reference list; Mahavir Jayanti is revised to 30-Mar-2026. For 2027, Karnataka's State general-holiday notification had not been published as at 3-Nov-2026. The calendar includes the DoPT 2027 central-government gazetted list as a reference, Karnataka fixed-date holidays, and clearly marked provisional Karnataka festival estimates. Central-reference, restricted-reference and provisional dates are not automatically holidays for a private office. Confirm your firm's declared holiday list; moon-sighting dates may change.";
 
 function validDate(value: unknown): value is string {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -57,6 +57,35 @@ export function presetHolidays2026_2027(): HolidayEntry[] {
       : "Karnataka DPAR Notification No. DPAR 16 HHL 2025; Mahavir Jayanti amendment applied where relevant",
   }));
 
+  const restricted2026: HolidayEntry[] = [
+    ["2026-01-01","New Year's Day"],
+    ["2026-01-27","Sri Madhvanavami"],
+    ["2026-02-04","Shab-e-Barath"],
+    ["2026-03-02","Holi Festival"],
+    ["2026-03-17","Shab-e-Qadar (moon-sighting dependent)"],
+    ["2026-03-20","Jumat-ul-Wida (moon-sighting dependent)"],
+    ["2026-03-23","Devara Daseemayya Jayanthi"],
+    ["2026-03-27","Sri Rama Navami"],
+    ["2026-04-04","Holy Saturday"],
+    ["2026-04-21","Sri Shankaracharya Jayanthi"],
+    ["2026-04-22","Sri Ramanujacharya Jayanthi"],
+    ["2026-08-21","Varamahalakshmi Vrata"],
+    ["2026-08-27","Yajur Upakarma"],
+    ["2026-08-28","Narayana Guru Jayanthi / Raksha Bandhan"],
+    ["2026-09-04","Sri Krishna Janmashtami"],
+    ["2026-09-08","Kanya Mariyamma Jayanthi"],
+    ["2026-09-17","Vishwakarma Jayanthi"],
+    ["2026-09-25","Ananta Padmanabha Vrata"],
+    ["2026-11-24","Guru Nanak Jayanthi"],
+    ["2026-11-26","Huttari Festival (Kodagu reference)"],
+    ["2026-12-24","Christmas Eve"],
+  ].map(([date,name])=>({
+    date,
+    name,
+    status:"restricted-reference" as const,
+    sourceLabel:"Karnataka DPAR 2026 Notification-I restricted-holiday annexure; state-government employees may use subject to approval, not an automatic private-office closure",
+  }));
+
   // DoPT O.M. F. No. 12/2/2023-JCA dated 16-Jul-2026 lists 17 gazetted
   // holidays for Central Government offices in Delhi/New Delhi. Two entries
   // fall on 15-Aug-2027, so the calendar stores one combined date row.
@@ -89,11 +118,10 @@ export function presetHolidays2026_2027(): HolidayEntry[] {
     {date:"2027-03-06",name:"Maha Shivaratri (estimated)",status:"provisional",sourceLabel:"Karnataka festival-date estimate; verify against the 2027 State notification"},
     {date:"2027-04-07",name:"Ugadi (estimated)",status:"provisional",sourceLabel:"Karnataka festival-date estimate; verify against the 2027 State notification"},
     {date:"2027-04-14",name:"Dr. B.R. Ambedkar Jayanthi (State holiday estimate)",status:"provisional",sourceLabel:"Fixed observance date; Karnataka 2027 general-holiday notification pending"},
-    {date:"2027-05-09",name:"Basava Jayanthi (estimated)",status:"provisional",sourceLabel:"Karnataka festival-date estimate; verify against the 2027 State notification"},
     {date:"2027-09-04",name:"Ganesh Chaturthi / Varasiddhi Vinayaka Vrata (estimated)",status:"provisional",sourceLabel:"Karnataka festival-date estimate; verify against the 2027 State notification"},
   ];
 
-  return [...k2026,...central2027,...karnatakaFixed2027,...provisional2027].sort((a,b)=>a.date.localeCompare(b.date));
+  return [...k2026,...restricted2026,...central2027,...karnatakaFixed2027,...provisional2027].sort((a,b)=>a.date.localeCompare(b.date));
 }
 
 /** Merge defaults with saved edits while preserving dates a manager deliberately removed. */
