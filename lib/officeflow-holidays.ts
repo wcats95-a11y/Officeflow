@@ -62,7 +62,7 @@ export function mergePresetHolidays(savedValue: unknown, presetVersion = 0): Hol
 
   if (presetVersion === 2) {
     const savedDates = new Set(saved.map(item=>item.date));
-    const removedLegacyDates = new Set(LEGACY_V2_PRESET_DATES.filter(date=>!savedDates.has(date)));
+    const removedLegacyDates = new Set<string>(LEGACY_V2_PRESET_DATES.filter(date=>!savedDates.has(date)));
     const legacyDates = new Set<string>(LEGACY_V2_PRESET_DATES);
     const merged = new Map<string,HolidayEntry>();
     for (const item of defaults) {
