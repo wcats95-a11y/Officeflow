@@ -11,7 +11,7 @@ const TASK_STATUSES = new Set([
 ]);
 const PRIORITIES = new Set(["Urgent","High","Medium","Low"]);
 const ACTS = new Set(["Income-tax Act, 1961","Income-tax Act, 2025"]);
-const HOLIDAY_STATUSES = new Set(["karnataka-official","national","karnataka-fixed","central-reference","provisional","office-confirmed"]);
+const HOLIDAY_STATUSES = new Set(["karnataka-official","national","karnataka-fixed","central-reference","restricted-reference","provisional","office-confirmed"]);
 
 function isRecord(value: unknown): value is Record<string, any> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -45,7 +45,7 @@ function validTask(value:unknown):boolean {
   if("applicableAct" in value && !ACTS.has(value.applicableAct)) return false;
   if("status" in value && !TASK_STATUSES.has(value.status)) return false;
   if("priority" in value && !PRIORITIES.has(value.priority)) return false;
-  const stringFields=["description","category","project","client","financialYear","assessmentYear","taxYear","taskType","preparer","reviewer","notes","matterName","matterType","documentLinks","statutoryDue","internalDue","noticeDue","reviewComments","lastClientFollowUp","nextClientFollowUp","lastFollowUpOutcome","filedDate","filingAck","lastProgressUpdate","completedAt","roundId","createdByUserId"];
+  const stringFields=["description","category","project","client","due","financialYear","assessmentYear","taxYear","taskType","preparer","reviewer","notes","matterName","matterType","documentLinks","statutoryDue","internalDue","noticeDue","reviewComments","lastClientFollowUp","nextClientFollowUp","lastFollowUpOutcome","filedDate","filingAck","lastProgressUpdate","completedAt","roundId","createdByUserId"];
   if(stringFields.some(key=>!optionalString(value,key))) return false;
   if("approvalStatus" in value && !["pending","approved","changes_requested"].includes(value.approvalStatus)) return false;
   if("checklist" in value && (!Array.isArray(value.checklist) || !value.checklist.every((item:any)=>isRecord(item)&&typeof item.text==="string"&&typeof item.done==="boolean"))) return false;
