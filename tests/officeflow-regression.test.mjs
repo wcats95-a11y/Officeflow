@@ -33,6 +33,7 @@ import {
 } from "../lib/officeflow-backup.ts";
 import { meetingOccurrenceDates, meetingTimesOverlap, hasMeetingConflict } from "../lib/officeflow-scheduling.ts";
 import { canSetTaskStatus, getTaskDeadlineDates } from "../lib/officeflow-task-rules.ts";
+import { MAX_LOCAL_WORKSPACE_FILE_BYTES, MAX_CLOUD_WORKSPACE_FILE_BYTES, isWorkspaceFileSizeAllowed } from "../lib/officeflow-upload-rules.ts";
 
 test("comp-off expires three calendar months after earning with end-of-month clamping", () => {
   assert.equal(compOffExpiryDate("2026-11-30"), "2027-02-28");
@@ -232,4 +233,15 @@ test("matter round helpers preserve sequence, avoid duplicates and map reply sta
   assert.equal(duplicateRound(rounds,{roundType:"Assessment",noticeNumber:"N-2",noticeDate:"2026-01-01"}),false);
   assert.equal(roundStatusFromTaskStatus("Partially replied"),"Partially replied");
   assert.equal(roundStatusFromTaskStatus("Filed / completed"),"Fully replied");
+});
+
+test("attachment limits protect localStorage and keep cloud uploads within the workspace payload budget", () => {
+  assert.equal(MAX_LOCAL_WORKSPACE_FILE_BYTES,2*1024*1024);
+  assert.equal(MAX_CLOUD_WORKSPACE_FILE_BYTES,6*1024*1024);
+  assert.equal(isWorkspaceFileSizeAllowed(1024,true),true);
+  assert.equal(isWorkspaceFileSizeAllowed(6*1024*1024,true),true);
+  assert.equal(isWorkspaceFileSizeAllowed(6*1024*1024+1,true),false);
+  assert.equal(isWorkspaceFileSizeAllowed(2*1024*1024,false),true);
+  assert.equal(isWorkspaceFileSizeAllowed(2*1024*1024+1,false),false);
+  assert.equal(isWorkspaceFileSizeAllowed(0,true),false);
 });
