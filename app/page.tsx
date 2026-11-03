@@ -69,7 +69,7 @@ export default function Home() {
  const [compOffNote,setCompOffNote]=useState("");
  const [holidayDate,setHolidayDate]=useState(localDate());
  const [holidayName,setHolidayName]=useState("");
- const compOffExpiry=(earnedDate:string)=>{const d=new Date(earnedDate+"T12:00:00");d.setMonth(d.getMonth()+3);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+ const compOffExpiry=(earnedDate:string)=>{const [y,m,day]=earnedDate.split("-").map(Number);const targetMonth=m-1+3;const year=y+Math.floor(targetMonth/12);const month=((targetMonth%12)+12)%12;const lastDay=new Date(year,month+1,0).getDate();const d=new Date(year,month,Math.min(day,lastDay));return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
  const compOffEarnedEntries=()=>compOffEntries.filter(e=>e.type==="earned");
  const compOffUsedEntries=()=>compOffEntries.filter(e=>e.type==="used");
  const compOffAvailableEntries=(onDate=localDate())=>{const usedIds=new Set(compOffUsedEntries().map(e=>e.earnedEntryId).filter(Boolean));const legacyUsed=compOffUsedEntries().filter(e=>!e.earnedEntryId).length;return compOffEarnedEntries().filter(e=>(e.expiresAt||compOffExpiry(e.date))>=onDate&&!usedIds.has(e.id)).sort((a,b)=>a.date.localeCompare(b.date)).slice(legacyUsed)};
@@ -182,7 +182,7 @@ export default function Home() {
   let alive=true;
   // Supabase emits INITIAL_SESSION after restoring the persisted browser session.
   // Use the auth event as the single source of truth to avoid a getSession/listener race on refresh.
-  const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,nextSession)=>{if(!alive)return;const nextId=nextSession?.user?.id||null;if(sessionUserId.current!==nextId){sessionUserId.current=nextId;setCloudHydrated(false);setCloudReady(false);setCloudStatus(nextId?"Loading secure workspace…":"Sign in required");setTasks([]);setClientDirectory([]);setClientGroups([]);setCompOffEntries([]);setCompOffHolidays([]);setMatterRounds([]);setMatterTaskTypes(starterTaskTypes());setMatterTypeNames(DEFAULT_MATTER_TYPES);setJuniorDirectory({});setAuditLog([]);setWorkspaceRole("");setWorkspaceOwnerId("");setWorkspaceDisplayName("");setWorkspaceMembers([]);}setSession(nextSession);setAuthReady(true);});
+  const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,nextSession)=>{if(!alive)return;const nextId=nextSession?.user?.id||null;if(sessionUserId.current!==nextId){sessionUserId.current=nextId;setCloudHydrated(false);setCloudReady(false);setCloudStatus(nextId?"Loading secure workspace…":"Sign in required");setTasks([]);setClientDirectory([]);setClientGroups([]);setCompOffEntries([]);setCompOffHolidays(presetHolidays2026_2027());setMatterRounds([]);setMatterTaskTypes(starterTaskTypes());setMatterTypeNames(DEFAULT_MATTER_TYPES);setJuniorDirectory({});setAuditLog([]);setWorkspaceRole("");setWorkspaceOwnerId("");setWorkspaceDisplayName("");setWorkspaceMembers([]);}setSession(nextSession);setAuthReady(true);});
   return ()=>{alive=false;subscription.unsubscribe()};
  },[]);
  useEffect(()=>{
