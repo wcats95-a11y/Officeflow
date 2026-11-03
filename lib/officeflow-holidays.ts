@@ -31,6 +31,15 @@ function validDate(value: unknown): value is string {
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }
 
+/** Legacy localStorage arrays did not store a preset version. Detect the expanded v2 list
+ * by overlap; smaller early lists are migrated as pre-v2 so new dates are added. */
+export function inferHolidayPresetVersion(savedValue: unknown): number {
+  if (!Array.isArray(savedValue)) return 0;
+  const savedDates = new Set(savedValue.filter((item:any)=>item && validDate(item.date)).map((item:any)=>item.date));
+  const legacyV2Matches = LEGACY_V2_PRESET_DATES.filter(date=>savedDates.has(date)).length;
+  return legacyV2Matches >= 5 ? 2 : 0;
+}
+
 export function presetHolidays2026_2027(): HolidayEntry[] {
   const k2026: HolidayEntry[] = [
     ["2026-01-15","Makara Sankranti"],

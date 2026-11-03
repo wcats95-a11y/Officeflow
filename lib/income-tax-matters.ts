@@ -164,6 +164,17 @@ export function validateActYears(act:string,financialYear:string,assessmentYear:
   return null;
 }
 
+/** Keep FY/AY and Tax Year fields mutually exclusive when switching Acts or migrating records. */
+export function normalizeTaskActYearFields<T extends {applicableAct?:string;financialYear?:string;assessmentYear?:string;taxYear?:string}>(
+  task:T,
+):T & {applicableAct:IncomeTaxAct;financialYear:string;assessmentYear:string;taxYear:string}{
+  const applicableAct:IncomeTaxAct=task.applicableAct==="Income-tax Act, 2025"?"Income-tax Act, 2025":"Income-tax Act, 1961";
+  if(applicableAct==="Income-tax Act, 2025"){
+    return {...task,applicableAct,financialYear:"",assessmentYear:"",taxYear:normalizeTaxYear(task.taxYear||"")||""};
+  }
+  return {...task,applicableAct,financialYear:task.financialYear||"",assessmentYear:task.assessmentYear||"",taxYear:""};
+}
+
 export function detectIncomeTaxYears(text:string):{financialYear?:string;assessmentYear?:string;taxYear?:string}{
   const source=text.replace(/[–—]/g,"-");
   const ay=source.match(/(?:assessment\s+year|\bAY\b|A\.Y\.)\s*[:.-]?\s*(20\d{2}\s*[-/]\s*\d{2,4})/i);

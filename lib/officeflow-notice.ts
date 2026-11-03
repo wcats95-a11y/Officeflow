@@ -21,6 +21,37 @@ export function suggestNoticeDocuments(noticeText: string): string[] {
   return NOTICE_DOCUMENT_RULES.filter(rule => rule.pattern.test(text)).map(rule => rule.label);
 }
 
+const NOTICE_MONTH_NUMBER:Record<string,number> = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+function validNoticeDate(year:number,month:number,day:number):string {
+  const check=new Date(Date.UTC(year,month-1,day));
+  if(check.getUTCFullYear()!==year||check.getUTCMonth()!==month-1||check.getUTCDate()!==day)return "";
+  return `${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+}
+function parseNoticeDateToken(token:string):string {
+  const value=token.trim().replace(/,/g,"");
+  let match=value.match(/^(20\d{2})-(\d{1,2})-(\d{1,2})$/);
+  if(match)return validNoticeDate(Number(match[1]),Number(match[2]),Number(match[3]));
+  match=value.match(/^(\d{1,2})[/-]([A-Za-z]{3,9}|\d{1,2})[/-](\d{2,4})$/);
+  if(match){const day=Number(match[1]);const month=Number(match[2])||NOTICE_MONTH_NUMBER[match[2].slice(0,3).toLowerCase()]||0;let year=Number(match[3]);if(year<100)year+=2000;return validNoticeDate(year,month,day);}
+  match=value.match(/^(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})$/);
+  if(match)return validNoticeDate(Number(match[3]),NOTICE_MONTH_NUMBER[match[2].slice(0,3).toLowerCase()]||0,Number(match[1]));
+  match=value.match(/^([A-Za-z]{3,9})\s+(\d{1,2})\s+(\d{4})$/);
+  if(match)return validNoticeDate(Number(match[3]),NOTICE_MONTH_NUMBER[match[1].slice(0,3).toLowerCase()]||0,Number(match[2]));
+  return "";
+}
+/** Extract an explicitly labelled response/deposit/hearing date using Indian dd-mm-yyyy ordering. */
+export function extractNoticeDueDate(noticeText:string):string {
+  const text=String(noticeText||"");if(!text.trim())return "";
+  const patterns=[
+    /(?:reply|respond|response|compliance|submit|submission|hearing|due\s+date|last\s+date|on\s+or\s+before|by)\D{0,45}(20\d{2}-\d{1,2}-\d{1,2})/i,
+    /(?:reply|respond|response|compliance|submit|submission|hearing|due\s+date|last\s+date|on\s+or\s+before|by)\D{0,45}(\d{1,2}[/-](?:\d{1,2}|[A-Za-z]{3,9})[/-]\d{2,4})/i,
+    /(?:reply|respond|response|compliance|submit|submission|hearing|due\s+date|last\s+date|on\s+or\s+before|by)\D{0,45}(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}|[A-Za-z]{3,9}\s+\d{1,2},?\s+\d{4})/i,
+  ];
+  for(const pattern of patterns){const match=text.match(pattern);if(match)return parseNoticeDateToken(match[1]);}
+  return "";
+}
+
+
 export function buildNoticeChecklist(kind: string, noticeText: string): string[] {
   const base: Record<string, string[]> = {
     "Show-cause notice": ["Notice and allegations analysed", "Documents required list sent", "Documents and evidence received", "Draft point-wise reply to allegations", "Prepare supporting annexures", "Send reply for review", "File reply and save acknowledgement"],

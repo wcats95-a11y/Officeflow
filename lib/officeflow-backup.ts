@@ -1,4 +1,4 @@
-import { mergeStarterTaskTypes, mergeMatterTypeNames, normalizeTaxYear } from "./income-tax-matters.ts";
+import { mergeStarterTaskTypes, mergeMatterTypeNames, normalizeTaskActYearFields } from "./income-tax-matters.ts";
 import { normalizeCompOffEntries } from "./comp-off.ts";
 import { mergePresetHolidays, HOLIDAY_PRESET_VERSION } from "./officeflow-holidays.ts";
 
@@ -84,7 +84,7 @@ export function isValidOfficeFlowBackup(value: unknown): boolean {
 export function migrateOfficeFlowBackup(value: unknown): Record<string, any> {
   if (!isValidOfficeFlowBackup(value)) throw new Error("Invalid or unsupported OfficeFlow backup");
   const data=value as Record<string,any>;
-  const tasks=data.tasks.map((task:any)=>({
+  const tasks=data.tasks.map((task:any)=>normalizeTaskActYearFields({
     ...task,
     description:typeof task.description==="string"?task.description:"",
     priority:PRIORITIES.has(task.priority)?task.priority:"Medium",
@@ -97,7 +97,7 @@ export function migrateOfficeFlowBackup(value: unknown): Record<string, any> {
     applicableAct:task.applicableAct==="Income-tax Act, 2025"?"Income-tax Act, 2025":"Income-tax Act, 1961",
     financialYear:typeof task.financialYear==="string"?task.financialYear:"",
     assessmentYear:typeof task.assessmentYear==="string"?task.assessmentYear:"",
-    taxYear:task.applicableAct==="Income-tax Act, 2025"?(normalizeTaxYear(task.taxYear||"")||task.taxYear||""):"",
+    taxYear:typeof task.taxYear==="string"?task.taxYear:"",
     checklist:Array.isArray(task.checklist)?task.checklist:[],
     uploadedDocuments:Array.isArray(task.uploadedDocuments)?task.uploadedDocuments:[],
     activity:Array.isArray(task.activity)?task.activity:[],

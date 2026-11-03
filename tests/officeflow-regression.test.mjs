@@ -13,6 +13,7 @@ import {
   mergeStarterTaskTypes,
   starterTaskTypes,
   validateActYears,
+  normalizeTaskActYearFields,
   detectIncomeTaxYears,
   assessmentYearFromFinancialYear,
   isIncomeTaxTaskLike,
@@ -24,8 +25,10 @@ import {
   HOLIDAY_PRESET_VERSION,
   presetHolidays2026_2027,
   mergePresetHolidays,
+  inferHolidayPresetVersion,
 } from "../lib/officeflow-holidays.ts";
-import { suggestNoticeDocuments, buildNoticeChecklist } from "../lib/officeflow-notice.ts";
+import { suggestNoticeDocuments, buildNoticeChecklist, extractNoticeDueDate } from "../lib/officeflow-notice.ts";
+import { getDiaryDateRange, indiaDateFromTimestamp, indiaLocalDateTimeToISO } from "../lib/officeflow-date.ts";
 import {
   OFFICEFLOW_BACKUP_SCHEMA_VERSION,
   isValidOfficeFlowBackup,
@@ -203,6 +206,10 @@ test("legacy backup migration fills missing fields and adds both Act catalogues 
   assert.equal(migrated.tasks[0].id,"task-legacy");
   assert.equal(migrated.tasks[0].status,"To Do");
   assert.deepEqual(migrated.tasks[0].juniors,[]);
+  const migratedAct2025=migrateOfficeFlowBackup({schemaVersion:1,tasks:[{id:"task-2025",title:"2025 task",applicableAct:"Income-tax Act, 2025",financialYear:"2025-26",assessmentYear:"2026-27",taxYear:"2026-27"}]}).tasks[0];
+  assert.equal(migratedAct2025.financialYear,"");
+  assert.equal(migratedAct2025.assessmentYear,"");
+  assert.equal(migratedAct2025.taxYear,"2026-27");
   assert.equal(migrated.juniorDirectory.constructor,Object);
   assert.ok(migrated.matterTaskTypes.some(item=>item.id==="custom-1961"&&item.act==="Income-tax Act, 1961"));
   assert.ok(migrated.matterTaskTypes.some(item=>item.act==="Income-tax Act, 2025"&&item.matterType==="Compliance"));
@@ -246,4 +253,43 @@ test("attachment limits protect localStorage and keep cloud uploads within the w
   assert.equal(isWorkspaceFileSizeAllowed(2*1024*1024,false),true);
   assert.equal(isWorkspaceFileSizeAllowed(2*1024*1024+1,false),false);
   assert.equal(isWorkspaceFileSizeAllowed(0,true),false);
+});
+
+test("Act-specific task year fields never leak across Acts", () => {
+  const act2025=normalizeTaskActYearFields({applicableAct:"Income-tax Act, 2025",financialYear:"2025-26",assessmentYear:"2026-27",taxYear:"2026-27"});
+  assert.equal(act2025.financialYear,"");assert.equal(act2025.assessmentYear,"");assert.equal(act2025.taxYear,"2026-27");
+  const act1961=normalizeTaskActYearFields({applicableAct:"Income-tax Act, 1961",financialYear:"2025-26",assessmentYear:"2026-27",taxYear:"2026-27"});
+  assert.equal(act1961.financialYear,"2025-26");assert.equal(act1961.assessmentYear,"2026-27");assert.equal(act1961.taxYear,"");
+});
+test("legacy unversioned five-date holiday arrays get expanded presets; v2 removals remain removed", () => {
+  const early=["2026-01-26","2026-05-01","2026-08-15","2026-10-02","2026-11-01"].map(date=>({date,name:date}));
+  assert.equal(inferHolidayPresetVersion(early),0);
+  const migratedEarly=mergePresetHolidays(early,inferHolidayPresetVersion(early));
+  assert.ok(migratedEarly.some(x=>x.date==="2026-01-01"&&x.status==="restricted-reference"));
+  assert.ok(migratedEarly.some(x=>x.date==="2027-03-10"&&x.status==="central-reference"));
+  const v2=[
+    "2026-01-15","2026-01-26","2026-03-19","2026-03-21","2026-03-31","2026-04-03","2026-04-14","2026-04-20","2026-05-01","2026-05-28","2026-06-26","2026-08-15","2026-08-26","2026-09-14","2026-10-02","2026-10-20","2026-10-21","2026-11-10","2026-11-27","2026-12-25","2027-01-26","2027-05-01","2027-08-15","2027-10-02","2027-11-01","2027-12-25"
+  ].filter(x=>x!=="2026-01-15").map(date=>({date,name:date}));
+  assert.equal(inferHolidayPresetVersion(v2),2);
+  assert.equal(mergePresetHolidays(v2,inferHolidayPresetVersion(v2)).some(x=>x.date==="2026-01-15"),false);
+});
+test("Diary ranges and activity timestamps use Asia/Kolkata calendar dates", () => {
+  assert.deepEqual(getDiaryDateRange("2026-11-03","month"),["2026-11-01","2026-11-30"]);
+  assert.deepEqual(getDiaryDateRange("2026-11-03","week"),["2026-11-01","2026-11-07"]);
+  assert.deepEqual(getDiaryDateRange("2026-11-03","day"),["2026-11-03","2026-11-03"]);
+  assert.deepEqual(getDiaryDateRange("2026-02-30","month"),["",""]);
+  assert.equal(indiaDateFromTimestamp("2026-11-02T20:00:00.000Z"),"2026-11-03");
+  assert.equal(indiaLocalDateTimeToISO("2026-11-03","00:30:00"),"2026-11-02T19:00:00.000Z");
+  assert.equal(indiaLocalDateTimeToISO("2026-02-30","00:30:00"),"");
+});
+test("notice due-date extraction uses Indian date order and rejects impossible or unlabelled dates", () => {
+  assert.equal(extractNoticeDueDate("Submit your reply on or before 30-03-2026"),"2026-03-30");
+  assert.equal(extractNoticeDueDate("Response due by 30 Mar 2026"),"2026-03-30");
+  assert.equal(extractNoticeDueDate("Please respond by 2026-03-30"),"2026-03-30");
+  assert.equal(extractNoticeDueDate("Reply by 31/02/2026"),"");
+  assert.equal(extractNoticeDueDate("Notice issued on 30-03-2026"),"");
+});
+test("meeting conflicts include overlaps across midnight and allow exact end-to-start handoff", () => {
+  assert.equal(meetingTimesOverlap({date:"2027-01-01",start:"23:30",duration:120},{date:"2027-01-02",start:"00:30",duration:30}),true);
+  assert.equal(meetingTimesOverlap({date:"2027-01-01",start:"23:00",duration:60},{date:"2027-01-02",start:"00:00",duration:30}),false);
 });

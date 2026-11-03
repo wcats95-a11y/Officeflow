@@ -4,11 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm test && next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --experimental-strip-types --test tests/*.test.mjs",
-    "prebuild": "npm test"
+    "test": "node --experimental-strip-types --test tests/*.test.mjs"
   },
   "dependencies": {
     "next": "16.4.3",

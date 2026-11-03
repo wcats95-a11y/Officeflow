@@ -40,10 +40,15 @@ function minutes(value:string):number|null {
   return match?Number(match[1])*60+Number(match[2]):null;
 }
 
+function absoluteStartMinutes(meeting:MeetingLike):number|null {
+  if(!isISODate(meeting.date)||!Number.isFinite(meeting.duration)||meeting.duration<=0||meeting.duration>1440)return null;
+  const start=minutes(meeting.start);if(start===null)return null;
+  const [year,month,day]=meeting.date.split("-").map(Number);
+  return Date.UTC(year,month-1,day,0,start)/60000;
+}
 export function meetingTimesOverlap(a:MeetingLike,b:MeetingLike):boolean {
-  if(a.date!==b.date) return false;
-  const aStart=minutes(a.start),bStart=minutes(b.start);
-  if(aStart===null||bStart===null||!Number.isFinite(a.duration)||!Number.isFinite(b.duration)) return false;
+  const aStart=absoluteStartMinutes(a),bStart=absoluteStartMinutes(b);
+  if(aStart===null||bStart===null)return false;
   return aStart < bStart+b.duration && aStart+a.duration > bStart;
 }
 
