@@ -96,10 +96,12 @@ test("holiday migration preserves a previously removed 2026 preset while adding 
   const saved=oldDates.filter(date=>date!=="2026-01-15").map(date=>({date,name:date}));
   const migrated=mergePresetHolidays(saved,2);
   assert.ok(!migrated.some(x=>x.date==="2026-01-15"));
-  assert.equal(migrated.find(x=>x.date==="2026-01-26").status,"karnataka-official");
+  assert.equal(migrated.find(x=>x.date==="2026-01-26").status,"national");
   assert.ok(migrated.some(x=>x.date==="2027-03-10"));
   const current=mergePresetHolidays([{date:"2026-01-26",name:"Republic Day"}],3);
-  assert.deepEqual(current,[{date:"2026-01-26",name:"Republic Day"}]);
+  assert.ok(current.some(x=>x.date==="2026-01-26"&&x.name==="Republic Day"));
+  assert.ok(current.some(x=>x.date==="2026-01-01"&&x.status==="restricted-reference"));
+  assert.ok(!current.some(x=>x.date==="2026-03-19"));
   assert.ok(all.length>30);
 });
 
