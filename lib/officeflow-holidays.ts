@@ -10,6 +10,17 @@ const LEGACY_V2_PRESET_DATES = [
 
 // Exact dates present in the version-3 defaults. Missing dates in a v3 saved
 // list are treated as deliberate user removals during the v3 -> v4 migration.
+const OBSOLETE_V3_PRESET_ENTRIES = new Map<string,string>([
+  ["2027-01-14","Makara Sankranti (estimated)"],
+  ["2027-04-08","Ugadi (estimated)"],
+  ["2027-05-09","Basava Jayanthi (estimated)"],
+  ["2027-09-29","Mahalaya Amavasye (estimated)"],
+  ["2027-10-10","Vijayadashami (estimated)"],
+  ["2027-10-15","Valmiki Jayanthi (estimated)"],
+  ["2027-10-30","Balipadyami / Deepavali (estimated)"],
+  ["2027-11-16","Kanakadasa Jayanthi (estimated)"],
+]);
+
 const LEGACY_V3_PRESET_DATES = [
   "2026-01-15","2026-01-26","2026-03-19","2026-03-21","2026-03-30","2026-04-03","2026-04-14","2026-04-20","2026-05-01","2026-05-28","2026-06-26","2026-08-15","2026-08-26","2026-09-14","2026-10-02","2026-10-20","2026-10-21","2026-11-01","2026-11-10","2026-11-27","2026-12-25",
   "2027-01-14","2027-01-26","2027-03-06","2027-03-10","2027-03-26","2027-04-08","2027-04-14","2027-04-19","2027-05-01","2027-05-09","2027-05-17","2027-05-20","2027-06-16","2027-08-15","2027-09-04","2027-09-29","2027-10-02","2027-10-09","2027-10-10","2027-10-15","2027-10-29","2027-10-30","2027-11-01","2027-11-14","2027-11-16","2027-12-25",
@@ -144,11 +155,16 @@ export function mergePresetHolidays(savedValue: unknown, presetVersion = 0): Hol
     : item;
 
   if (presetVersion === 3) {
-    const savedDates = new Set(saved.map(item=>item.date));
+    const retainedSaved = saved.filter(item => {
+      const obsoleteName = OBSOLETE_V3_PRESET_ENTRIES.get(item.date);
+      if (!obsoleteName || item.status === "office-confirmed") return true;
+      return item.name !== obsoleteName;
+    });
+    const savedDates = new Set(retainedSaved.map(item=>item.date));
     const removedLegacyDates = new Set<string>(LEGACY_V3_PRESET_DATES.filter(date=>!savedDates.has(date)));
     const merged = new Map<string,HolidayEntry>();
     for (const item of defaults) if (!removedLegacyDates.has(item.date)) merged.set(item.date,item);
-    for (const item of saved) merged.set(item.date,mergeSaved(item,defaultByDate.get(item.date)));
+    for (const item of retainedSaved) merged.set(item.date,mergeSaved(item,defaultByDate.get(item.date)));
     return [...merged.values()].sort((a,b)=>a.date.localeCompare(b.date));
   }
 
