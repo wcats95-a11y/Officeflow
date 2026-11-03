@@ -930,3 +930,137 @@ input,select,textarea{font-size:16px}
 .app .dashboard-card-icon svg{width:19px;height:19px}
 .app .quick-action-icon svg{width:18px;height:18px}
 @media(max-width:560px){.app .notification-panel{position:fixed;top:70px;right:12px}.app .notification{width:38px;height:38px}}
+
+
+/* Unified teal-green palette — applied consistently in both themes */
+.app{
+  --accent:#0f9f8a!important;
+  --accent-strong:#087f70!important;
+  --purple:#0f9f8a!important;
+  --purple-soft:rgba(20,184,166,.12)!important;
+  --ring:rgba(20,184,166,.24)!important;
+}
+.app:not(.dark){
+  --bg:#eaf7f3!important;
+  --surface:#f8fdfb!important;
+  --surface-2:#e1f2ec!important;
+  --surface-3:#d2ebe2!important;
+  --ink:#153b35!important;
+  --muted:#587a72!important;
+  --line:#c9e4da!important;
+  --shadow:0 8px 28px rgba(14,89,72,.07)!important;
+  background:linear-gradient(145deg,#eaf7f3 0%,#e2f3ed 52%,#d8eee6 100%)!important;
+  color:var(--ink)!important;
+}
+.app:not(.dark) .main-area,.app:not(.dark) .content{background:transparent!important;color:var(--ink)!important}
+.app:not(.dark) .sidebar,.app:not(.dark) .topbar{
+  background:rgba(248,253,251,.9)!important;
+  border-color:#c9e4da!important;
+  backdrop-filter:blur(18px);
+}
+.app:not(.dark) .workspace,.app:not(.dark) .searchbox,.app:not(.dark) .stat-card,
+.app:not(.dark) .dashboard-card,.app:not(.dark) .task-panel,.app:not(.dark) .entity-card,
+.app:not(.dark) .directory-form,.app:not(.dark) .directory-row,.app:not(.dark) .calendar-card,
+.app:not(.dark) .statutory-calendar,.app:not(.dark) .kanban-card,.app:not(.dark) .modal{
+  background:linear-gradient(145deg,#fbfefc,#edf8f3)!important;
+  color:#153b35!important;border-color:#c9e4da!important;
+}
+.app:not(.dark) .kanban-column,.app:not(.dark) .task-table-head,
+.app:not(.dark) .month-weekday,.app:not(.dark) .calendar-schedule-controls{
+  background:#e1f2ec!important;color:#426c61!important;border-color:#c9e4da!important;
+}
+.app:not(.dark) .month-day{background:#f8fdfb!important;color:#153b35!important;border-color:#c9e4da!important}
+.app:not(.dark) .month-day.outside-month{background:#e7f3ee!important;color:#78958c!important}
+.app:not(.dark) .month-day.today,.app:not(.dark) .month-day.selected-day{
+  background:#d0eee4!important;border-color:#0f9f8a!important;
+}
+.app:not(.dark) .month-day-number,.app:not(.dark) .task-name-wrap b,
+.app:not(.dark) .section-heading,.app:not(.dark) .modal h2{color:#153b35!important}
+.app:not(.dark) .task-name-wrap small,.app:not(.dark) .field-hint,
+.app:not(.dark) .calendar-client-info small{color:#587a72!important}
+.app:not(.dark) input,.app:not(.dark) select,.app:not(.dark) textarea,
+.app:not(.dark) .modal input,.app:not(.dark) .modal select,.app:not(.dark) .modal textarea{
+  background:#f5fcf8!important;color:#153b35!important;border-color:#c1dfd4!important;
+}
+.app:not(.dark) input::placeholder,.app:not(.dark) textarea::placeholder{color:#78958c!important}
+.app:not(.dark) .primary-button{
+  background:linear-gradient(135deg,#0f9f8a,#087f70)!important;
+  box-shadow:0 7px 18px rgba(15,159,138,.22)!important;
+}
+.app:not(.dark) .nav-item.active,.app:not(.dark) .settings-tab.active{
+  color:#087f70!important;background:#d7f1e8!important;
+}
+.app:not(.dark) .nav-item:hover,.app:not(.dark) .quick-action-grid button:hover{background:#e1f2ec!important}
+.app:not(.dark) .help-card,.app:not(.dark) .bottom-note{
+  background:linear-gradient(135deg,#d9f1e8,#edf8f3)!important;
+  border-color:#c1e4d7!important;color:#315f54!important;
+}
+.app:not(.dark) .help-card p,.app:not(.dark) .bottom-note{color:#587a72!important}
+.app:not(.dark) .help-card b,.app:not(.dark) .bottom-note b{color:#174f43!important}
+.app:not(.dark) .notification{background:#e1f2ec!important;border-color:#c1dfd4!important;color:#087f70!important}
+.app:not(.dark) .notification-panel,.app:not(.dark) .notification-panel-head{
+  background:#f4fcf8!important;color:#153b35!important;border-color:#c9e4da!important;
+}
+.app:not(.dark) .notification-item{color:#153b35!important;border-color:#d7eae2!important}
+.app:not(.dark) .notification-item:hover{background:#e1f2ec!important}
+.app:not(.dark) .notification-copy b,.app:not(.dark) .notification-copy small,
+.app:not(.dark) .notification-panel-head small{color:#587a72!important}
+.app:not(.dark) .notification-footer{background:#e1f2ec!important;color:#087f70!important;border-color:#c9e4da!important}
+.app:not(.dark) .notification-empty{color:#153b35!important}
+.app:not(.dark) .notification-empty small{color:#587a72!important}
+.app.dark{
+  --bg:#061b19!important;
+  --surface:#0b2824!important;
+  --surface-2:#10332e!important;
+  --surface-3:#164239!important;
+  --ink:#e7faf3!important;
+  --muted:#a1c8ba!important;
+  --line:rgba(113,190,164,.2)!important;
+  --accent:#45d6b0!important;
+  --accent-strong:#2bbf9d!important;
+  --purple:#45d6b0!important;
+  --purple-soft:rgba(69,214,176,.14)!important;
+  --ring:rgba(69,214,176,.25)!important;
+  background:radial-gradient(ellipse at 12% 0%,rgba(20,184,166,.14),transparent 38%),linear-gradient(145deg,#061b19,#082521 58%,#0b3029)!important;
+  color:#e7faf3!important;
+}
+.app.dark .main-area,.app.dark .content{background:transparent!important;color:#e7faf3!important}
+.app.dark .sidebar,.app.dark .topbar{
+  background:rgba(7, thirty, 27, .94)!important;
+  background:rgba(7,30,27,.94)!important;
+  border-color:rgba(113,190,164,.2)!important;
+}
+.app.dark .workspace,.app.dark .searchbox,.app.dark .stat-card,.app.dark .dashboard-card,
+.app.dark .task-panel,.app.dark .entity-card,.app.dark .directory-form,.app.dark .directory-row,
+.app.dark .calendar-card,.app.dark .statutory-calendar,.app.dark .kanban-card,.app.dark .modal{
+  background:linear-gradient(145deg,#0d302a,#0a2622)!important;
+  color:#e7faf3!important;border-color:rgba(113,190,164,.2)!important;
+}
+.app.dark .kanban-column,.app.dark .task-table-head,.app.dark .month-weekday,
+.app.dark .calendar-schedule-controls{background:#0a2622!important;color:#a1c8ba!important;border-color:rgba(113,190,164,.2)!important}
+.app.dark .month-day{background:#0b2b25!important;color:#e7faf3!important;border-color:rgba(113,190,164,.2)!important}
+.app.dark .month-day.outside-month{background:#071f1c!important;color:#789e91!important}
+.app.dark .month-day.today,.app.dark .month-day.selected-day{background:#12473b!important;border-color:#45d6b0!important}
+.app.dark .month-day-number,.app.dark .task-name-wrap b,.app.dark .section-heading,
+.app.dark .modal h2,.app.dark .dashboard-card-heading h3{color:#e7faf3!important}
+.app.dark .task-name-wrap small,.app.dark .field-hint,.app.dark .calendar-client-info small{color:#a1c8ba!important}
+.app.dark input,.app.dark select,.app.dark textarea,.app.dark .modal input,
+.app.dark .modal select,.app.dark .modal textarea{
+  background:#10332e!important;color:#e7faf3!important;border-color:rgba(113,190,164,.25)!important;
+}
+.app.dark input::placeholder,.app.dark textarea::placeholder{color:#83aa9c!important}
+.app.dark .primary-button{background:linear-gradient(135deg,#27b995,#13866f)!important}
+.app.dark .nav-item.active,.app.dark .settings-tab.active{background:rgba(69,214,176,.14)!important;color:#70e7c5!important}
+.app.dark .nav-item:hover,.app.dark .quick-action-grid button:hover{background:#10332e!important}
+.app.dark .help-card,.app.dark .bottom-note{background:linear-gradient(135deg,#103b32,#0b2c26)!important;border-color:rgba(113,190,164,.2)!important;color:#a1c8ba!important}
+.app.dark .notification,.app.dark .notification-panel,.app.dark .notification-panel-head{
+  background:#0b3029!important;color:#e7faf3!important;border-color:rgba(113,190,164,.24)!important;
+}
+.app.dark .notification-item{color:#e7faf3!important;border-color:rgba(113,190,164,.15)!important}
+.app.dark .notification-item:hover{background:#124036!important}
+.app.dark .notification-copy b,.app.dark .notification-copy small,.app.dark .notification-panel-head small{color:#a1c8ba!important}
+.app.dark .notification-footer{background:#10382f!important;color:#70e7c5!important;border-color:rgba(113,190,164,.2)!important}
+.app.dark .calendar-date-popover{background:#0b3029!important;color:#e7faf3!important;border-color:rgba(113,190,164,.25)!important}
+.app .cmr-watermark{border-color:rgba(20,159,138,.25)!important}
+.app.dark .cmr-watermark{background:rgba(7,30,27,.9)!important;border-color:rgba(69,214,176,.25)!important;color:#a1c8ba!important}
+.app.dark .cmr-watermark b{color:#70e7c5!important}
