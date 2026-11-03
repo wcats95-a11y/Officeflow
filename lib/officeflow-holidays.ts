@@ -13,12 +13,7 @@ const LEGACY_V2_PRESET_DATES = [
 const OBSOLETE_V3_PRESET_ENTRIES = new Map<string,string>([
   ["2027-01-14","Makara Sankranti (estimated)"],
   ["2027-04-08","Ugadi (estimated)"],
-  ["2027-05-09","Basava Jayanthi (estimated)"],
-  ["2027-09-29","Mahalaya Amavasye (estimated)"],
-  ["2027-10-10","Vijayadashami (estimated)"],
-  ["2027-10-15","Valmiki Jayanthi (estimated)"],
   ["2027-10-30","Balipadyami / Deepavali (estimated)"],
-  ["2027-11-16","Kanakadasa Jayanthi (estimated)"],
 ]);
 
 const LEGACY_V3_PRESET_DATES = [
@@ -113,8 +108,8 @@ export function presetHolidays2026_2027(): HolidayEntry[] {
     {date:"2027-08-15",name:"Independence Day / Milad-un-Nabi (moon-sighting dependent)",status:"national",sourceLabel:"National fixed-date holiday; DoPT list also places Milad on the same date"},
     {date:"2027-08-25",name:"Janmashtami (Vaishnav)",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027"},
     {date:"2027-10-02",name:"Gandhi Jayanti",status:"national",sourceLabel:"National fixed-date holiday; also in DoPT 2027 list"},
-    {date:"2027-10-09",name:"Dussehra / Vijaya Dashami",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027; Karnataka date remains subject to State notification"},
-    {date:"2027-10-29",name:"Diwali / Deepavali",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027; Karnataka may notify Naraka Chaturdasi instead"},
+    {date:"2027-10-09",name:"Dussehra / Maha Navami / Ayudhapooja (Karnataka date subject to State notification)",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027; Karnataka may notify Maha Navami / Ayudhapooja on this date"},
+    {date:"2027-10-29",name:"Diwali / Balipadyami / Deepavali (Karnataka estimate)",status:"provisional",sourceLabel:"DoPT central-government gazetted date; Karnataka holiday calendars place Balipadyami / Deepavali on this date, pending DPAR notification"},
     {date:"2027-11-14",name:"Guru Nanak Jayanti",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027"},
     {date:"2027-12-25",name:"Christmas",status:"central-reference",sourceLabel:"DoPT central-government gazetted holiday reference 2027"},
   ];
@@ -130,6 +125,12 @@ export function presetHolidays2026_2027(): HolidayEntry[] {
     {date:"2027-04-07",name:"Ugadi (estimated)",status:"provisional",sourceLabel:"Karnataka festival-date estimate; verify against the 2027 State notification"},
     {date:"2027-04-14",name:"Dr. B.R. Ambedkar Jayanthi (State holiday estimate)",status:"provisional",sourceLabel:"Fixed observance date; Karnataka 2027 general-holiday notification pending"},
     {date:"2027-09-04",name:"Ganesh Chaturthi / Varasiddhi Vinayaka Vrata (estimated)",status:"provisional",sourceLabel:"Karnataka festival-date estimate; verify against the 2027 State notification"},
+    {date:"2027-05-09",name:"Basava Jayanthi (Karnataka estimate)",status:"provisional",sourceLabel:"Karnataka 2027 holiday-calendar estimates; verify against the DPAR State notification"},
+    {date:"2027-09-29",name:"Mahalaya Amavasye (Karnataka estimate)",status:"provisional",sourceLabel:"Karnataka 2027 holiday-calendar estimates; verify against the DPAR State notification"},
+    {date:"2027-10-10",name:"Vijayadashami (Karnataka estimate)",status:"provisional",sourceLabel:"Karnataka 2027 holiday-calendar estimates; central-government Dussehra date is listed separately on 09-Oct"},
+    {date:"2027-10-15",name:"Maharshi Valmiki Jayanti (Karnataka estimate)",status:"provisional",sourceLabel:"Karnataka 2027 holiday-calendar estimates; verify against the DPAR State notification"},
+    {date:"2027-10-28",name:"Naraka Chaturdashi (Karnataka estimate)",status:"provisional",sourceLabel:"Karnataka 2027 holiday-calendar estimates; verify against the DPAR State notification"},
+    {date:"2027-11-16",name:"Kanakadasa Jayanthi (Karnataka estimate)",status:"provisional",sourceLabel:"Karnataka 2027 holiday-calendar estimates; verify against the DPAR State notification"},
   ];
 
   return [...k2026,...restricted2026,...central2027,...karnatakaFixed2027,...provisional2027].sort((a,b)=>a.date.localeCompare(b.date));
@@ -150,7 +151,7 @@ export function mergePresetHolidays(savedValue: unknown, presetVersion = 0): Hol
         ...item,
         // Keep an explicit office confirmation, but refresh stale preset status/source metadata.
         status: item.status === "office-confirmed" ? "office-confirmed" : (base.status || item.status),
-        sourceLabel: item.sourceLabel || base.sourceLabel,
+        sourceLabel: base.sourceLabel || item.sourceLabel,
       }
     : item;
 
