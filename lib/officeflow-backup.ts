@@ -102,7 +102,7 @@ export function migrateOfficeFlowBackup(value: unknown): Record<string, any> {
     uploadedDocuments:Array.isArray(task.uploadedDocuments)?task.uploadedDocuments:[],
     activity:Array.isArray(task.activity)?task.activity:[],
   }));
-  const presetVersion=Number(data.compOffHolidayPresetVersion||0);
+  const presetVersion=Number(data.compOffHolidayPresetVersion??(data.schemaVersion>=2.7?3:0));
   const legacyTaskTypes=Array.isArray(data.matterTaskTypes)?data.matterTaskTypes.map((item:any,index:number)=>({...item,act:ACTS.has(item.act)?item.act:"Income-tax Act, 1961",active:typeof item.active==="boolean"?item.active:true,sortOrder:Number.isFinite(item.sortOrder)?item.sortOrder:index})):[];
   return {
     ...data,
