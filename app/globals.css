@@ -1201,3 +1201,63 @@ input,select,textarea{font-size:16px}
   .app .calendar-date-popover .calendar-popover-actions .icon-button{width:34px;height:34px}
   .app .calendar-date-popover .calendar-empty{font-size:12px;padding:14px!important}
 }
+
+
+/* Force a genuinely dark teal-green sidebar in BOTH appearance modes.
+   Theme-qualified selectors intentionally override all earlier sidebar theme rules. */
+.app:not(.dark) .sidebar,
+.app.dark .sidebar{
+  background:linear-gradient(180deg,#063a34 0%,#042f2b 52%,#032722 100%)!important;
+  color:#e9fff7!important;
+  border-right:1px solid rgba(112,220,185,.18)!important;
+  box-shadow:8px 0 28px rgba(0,24,20,.18)!important;
+}
+.app:not(.dark) .sidebar .brand,
+.app.dark .sidebar .brand,
+.app:not(.dark) .sidebar .brand-light,
+.app.dark .sidebar .brand-light,
+.app:not(.dark) .sidebar .workspace b,
+.app.dark .sidebar .workspace b,
+.app:not(.dark) .sidebar .profile b,
+.app.dark .sidebar .profile b{color:#effff9!important}
+.app:not(.dark) .sidebar .workspace,
+.app.dark .sidebar .workspace{background:rgba(220,255,243,.07)!important;border-color:rgba(160,235,207,.16)!important}
+.app:not(.dark) .sidebar .nav-label,
+.app.dark .sidebar .nav-label{color:#8fc5b2!important}
+.app:not(.dark) .sidebar .nav-item,
+.app.dark .sidebar .nav-item{color:#c1e3d6!important;background:transparent!important}
+.app:not(.dark) .sidebar .nav-item:hover,
+.app.dark .sidebar .nav-item:hover{background:rgba(210,255,239,.09)!important;color:#fff!important}
+.app:not(.dark) .sidebar .nav-item.active,
+.app.dark .sidebar .nav-item.active{
+  background:rgba(67,201,157,.18)!important;
+  color:#8df0c9!important;
+  border-color:rgba(112,230,190,.2)!important;
+  box-shadow:inset 3px 0 0 #55d9a9!important;
+}
+.app:not(.dark) .sidebar .nav-count,
+.app.dark .sidebar .nav-count{background:rgba(220,255,243,.12)!important;color:#eafff6!important}
+.app:not(.dark) .sidebar .workspace-icon,
+.app.dark .sidebar .workspace-icon{background:rgba(75,214,168,.16)!important;color:#8ce9c5!important}
+.app:not(.dark) .sidebar .help-card,
+.app.dark .sidebar .help-card{
+  background:linear-gradient(135deg,rgba(62,180,139,.2),rgba(220,255,243,.06))!important;
+  border:1px solid rgba(160,235,207,.15)!important;color:#edfff7!important;
+}
+.app:not(.dark) .sidebar .help-card p,
+.app.dark .sidebar .help-card p,
+.app:not(.dark) .sidebar .workspace small,
+.app.dark .sidebar .workspace small,
+.app:not(.dark) .sidebar .profile small,
+.app.dark .sidebar .profile small{color:#a9d3c2!important}
+.app:not(.dark) .sidebar .profile,
+.app.dark .sidebar .profile{border-color:rgba(160,235,207,.16)!important}
+.app:not(.dark) .sidebar .profile .icon-button,
+.app.dark .sidebar .profile .icon-button{color:#d7f8e9!important}
+.app:not(.dark) .sidebar .brand-mark,
+.app.dark .sidebar .brand-mark{background:linear-gradient(145deg,#65e6b7,#1c9b78)!important;color:#043b30!important}
+@media(max-width:850px){
+  .app:not(.dark) .sidebar,.app.dark .sidebar{
+    background:linear-gradient(180deg,#063a34 0%,#042f2b 52%,#032722 100%)!important;
+  }
+}
