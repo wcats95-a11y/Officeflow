@@ -69,7 +69,7 @@ export default function Home() {
  const [accountMessage,setAccountMessage] = useState("");
  const [dark,setDark] = useState(true);
  useEffect(()=>{try{if(localStorage.getItem("officeflow-theme")==="dark")setDark(true)}catch{}},[]);
- useEffect(()=>{try{localStorage.setItem("officeflow-theme",dark?"dark":"light")}catch{}},[dark]);
+ useEffect(()=>{if(ready){try{localStorage.setItem("officeflow-theme",dark?"dark":"light")}catch{}}},[dark,ready]);
  const [toast,setToast] = useState("");
  const showToast=(message:string)=>{setToast(message);window.setTimeout(()=>setToast(current=>current===message?"":current),2600)};
  const [currentDateTime,setCurrentDateTime] = useState("");
