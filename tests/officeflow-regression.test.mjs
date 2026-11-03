@@ -72,6 +72,8 @@ test("deleting usage after its earning entry has expired does not create a live 
 test("Act 1961 and Act 2025 task catalogues stay separate and both load from an old workspace", () => {
   const oldWorkspaceTypes = starterTaskTypes().filter(item=>item.act==="Income-tax Act, 1961");
   const merged = mergeStarterTaskTypes(oldWorkspaceTypes);
+  const migratedLegacy=mergeStarterTaskTypes([{id:"legacy-custom",matterType:"Compliance",taskType:"Legacy custom template"}]);
+  assert.ok(migratedLegacy.some(item=>item.id==="legacy-custom"&&item.act==="Income-tax Act, 1961"&&item.active&&item.sortOrder===0));
   const act1961 = getMatterTaskTypesForAct(merged,"Compliance","Income-tax Act, 1961");
   const act2025 = getMatterTaskTypesForAct(merged,"Compliance","Income-tax Act, 2025");
 
