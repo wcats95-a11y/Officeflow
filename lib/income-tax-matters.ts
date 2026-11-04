@@ -10,9 +10,10 @@ export type MatterTaskType = { id:string; matterType:string; taskType:string; ac
 
 export type DirectTaxTaskLike = { taskType?:string; matterType?:string; applicableAct?:string; category?:string; title?:string; description?:string };
 export function isIncomeTaxTaskLike(task:DirectTaxTaskLike):boolean{
+  const classification=[task.taskType,task.matterType,task.category].filter(Boolean).join(" ").toLowerCase();
+  if(/\b(gst|goods and services tax)\b/.test(classification))return false;
   const text=[task.taskType,task.matterType,task.applicableAct,task.category,task.title,task.description].filter(Boolean).join(" ").toLowerCase();
-  if(/\b(gst|goods and services tax)\b/.test(text))return false;
-  return /income.?tax|direct tax|\bitr\b|\bpan\b|assessment|reassessment|faceless|tax audit|advance tax|capital gains|\btds\b|\btcs\b|tax deducted at source|tax collected at source|withholding tax|tax deduction|tax collection|section 14[38]|section 14[89]|section 15[456]|section 26as|form 16|form 26|tax notice|income-tax act/.test(text)||task.taskType==="Income tax";
+  return /income.?tax|direct tax|\bitr\b|\bpan\b|assessment|reassessment|faceless|tax audit|advance tax|capital gains|\btds\b|\btcs\b|tax deducted at source|tax collected at source|withholding tax|tax deduction|tax collection|section 14[38]|section 14[89]|section 15[456]|section 26as|form 16|form 26|tax notice|income-tax act/.test(text)||String(task.taskType||"").toLowerCase()==="income tax";
 }
 
 export const DEFAULT_MATTER_TYPES = [

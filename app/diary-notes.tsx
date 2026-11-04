@@ -28,14 +28,21 @@ async function getHandwritingReader() {
 }
 
 export default function DiaryNotes({ userId, onClose }: { userId?: string; onClose: () => void }) {
-  const [journals,setJournals]=useState<Journal[]>([]), [selectedDate,setSelectedDate]=useState(localDate), [activeId,setActiveId]=useState(""), [search,setSearch]=useState(""), [dateFilter,setDateFilter]=useState(""), [sidebarOpen,setSidebarOpen]=useState(false), [tool,setTool]=useState<"pen"|"eraser">("pen"), [penColor,setPenColor]=useState("#243f68"), [penWidth,setPenWidth]=useState(3.2), [lastInkPage,setLastInkPage]=useState(""), [saving,setSaving]=useState(false), [loaded,setLoaded]=useState(false), [ocrStatus,setOcrStatus]=useState("");
+  const [journals,setJournals]=useState<Journal[]>([]), [selectedDate,setSelectedDate]=useState(localDate), [activeId,setActiveId]=useState(""), [search,setSearch]=useState(""), [dateFilter,setDateFilter]=useState(""), [sidebarOpen,setSidebarOpen]=useState(false), [tool,setTool]=useState<"pen"|"eraser">("pen"), [penColor,setPenColor]=useState("#243f68"), [penWidth,setPenWidth]=useState(3.2), [lastInkPage,setLastInkPage]=useState(""), [saving,setSaving]=useState(false), [loaded,setLoaded]=useState(false), [ocrStatus,setOcrStatus]=useState(""), [saveError,setSaveError]=useState("");
+  const accountStorageKey=userId?`${storageKey}:user:${userId}`:`${storageKey}:local`;
   const canvasRefs=useRef(new Map<string,HTMLCanvasElement>()), activeStroke=useRef<{journalId:string;pageId:string;stroke:Stroke}|null>(null), journalsRef=useRef(journals);
   useEffect(()=>{journalsRef.current=journals},[journals]);
 
-  useEffect(()=>{let alive=true;setLoaded(false);setJournals([]);setActiveId("");(async()=>{
-    if(userId&&supabase){const {data,error}=await supabase.from("officeflow_notes").select("id,note_date,title,typed_text,handwriting_text,strokes,pages,updated_at").order("note_date",{ascending:false});if(alive&&!error){setJournals((data||[]).map(normalizeJournal));setLoaded(true);return;}}
-    try{const raw=localStorage.getItem(storageKey);if(alive)setJournals(raw?(JSON.parse(raw) as any[]).map(normalizeJournal):[])}catch{}if(alive)setLoaded(true);
-  })();return()=>{alive=false}},[userId]);
+  useEffect(()=>{let alive=true;setLoaded(false);setJournals([]);setActiveId("");setSaveError("");(async()=>{
+    if(userId&&supabase){
+      const {data,error}=await supabase.from("officeflow_notes").select("id,note_date,title,typed_text,handwriting_text,strokes,pages,updated_at").order("note_date",{ascending:false});
+      if(!alive)return;
+      if(!error){setJournals((data||[]).map(normalizeJournal));setLoaded(true);return;}
+      setSaveError("Cloud journal could not be loaded. Showing only this account's local recovery copy.");
+    }
+    try{const raw=localStorage.getItem(accountStorageKey);if(alive)setJournals(raw?(JSON.parse(raw) as any[]).map(normalizeJournal):[])}catch{if(alive)setSaveError("The local journal recovery copy could not be read.");}
+    if(alive)setLoaded(true);
+  })();return()=>{alive=false}},[userId,accountStorageKey]);
 
   const active=journals.find(j=>j.id===activeId)||journals.find(j=>j.note_date===selectedDate)||null;
   const filtered=useMemo(()=>journals.filter(j=>{
@@ -50,11 +57,19 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
   const addPage=()=>{if(!active)return;const page=makePage();updateJournal(active.id,{pages:[...active.pages,page]});setOcrStatus("");requestAnimationFrame(()=>document.getElementById(`journal-page-${page.id}`)?.scrollIntoView({behavior:"smooth",block:"start"}));};
 
   useEffect(()=>{if(!loaded)return;setSaving(true);const timer=setTimeout(async()=>{
-    const rows=journalsRef.current.map(j=>({id:j.id,user_id:userId,note_date:j.note_date,title:j.title,pages:j.pages,typed_text:j.pages.map(p=>p.typed_text).join("\n").slice(0,20000),handwriting_text:j.pages.map(p=>p.handwriting_text).join("\n").slice(0,20000),strokes:j.pages[0]?.strokes||[],updated_at:j.updated_at||new Date().toISOString()}));
-    if(userId&&supabase){if(rows.length)await supabase.from("officeflow_notes").upsert(rows,{onConflict:"id"});}
-    else{try{localStorage.setItem(storageKey,JSON.stringify(journalsRef.current))}catch{}}
-    setSaving(false);
-  },650);return()=>clearTimeout(timer)},[journals,loaded,userId]);
+    const current=journalsRef.current;
+    const rows=current.map(j=>({id:j.id,user_id:userId,note_date:j.note_date,title:j.title,pages:j.pages,typed_text:j.pages.map(p=>p.typed_text).join("\n").slice(0,20000),handwriting_text:j.pages.map(p=>p.handwriting_text).join("\n").slice(0,20000),strokes:j.pages[0]?.strokes||[],updated_at:j.updated_at||new Date().toISOString()}));
+    let localCacheSaved=true;
+    try{localStorage.setItem(accountStorageKey,JSON.stringify(current));}catch{localCacheSaved=false;}
+    if(userId&&supabase&&rows.length===0&&saveError){setSaving(false);return;}
+    try{
+      if(userId&&supabase&&rows.length){const {error}=await supabase.from("officeflow_notes").upsert(rows,{onConflict:"id"});if(error)throw error;}
+      if(!localCacheSaved)setSaveError(userId&&supabase?"Cloud saved; this browser could not keep a recovery copy.":"Local journal save failed. Copy your latest notes before leaving.");
+      else setSaveError("");
+    }catch(error){
+      setSaveError(localCacheSaved?"Cloud save failed. Changes are retained in this account's local recovery copy; retry after reconnecting.":"Cloud and local recovery saves failed. Keep this page open and copy your latest notes before leaving.");
+    }finally{setSaving(false);}
+  },650);return()=>clearTimeout(timer)},[journals,loaded,userId,accountStorageKey,saveError]);
 
   const drawPage=useCallback((page:JournalPage,canvas:HTMLCanvasElement)=>{
     const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return;const dpr=window.devicePixelRatio||1;
@@ -103,7 +118,7 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
   },[]);
 
   return <div className="journal-fullscreen">
-    <header className="journal-topbar"><div className="journal-brand"><span className="journal-brand-mark">✎</span><span><b>Daily journal</b><small>{saving?"Saving changes…":"All changes saved"}</small></span></div><div className="journal-top-actions"><button className="journal-panel-toggle" onClick={()=>setSidebarOpen(v=>!v)} aria-label="Show journal list">☰ <span>Journal list</span></button><button className="journal-close" onClick={onClose}>Done <span>✓</span></button></div></header>
+    <header className="journal-topbar"><div className="journal-brand"><span className="journal-brand-mark">✎</span><span><b>Daily journal</b><small>{saving?"Saving changes…":saveError||"All changes saved"}</small></span></div><div className="journal-top-actions"><button className="journal-panel-toggle" onClick={()=>setSidebarOpen(v=>!v)} aria-label="Show journal list">☰ <span>Journal list</span></button><button className="journal-close" onClick={onClose}>Done <span>✓</span></button></div></header>
     <div className="journal-frame">
       {sidebarOpen&&<aside className="journal-sidebar"><div className="journal-sidebar-heading"><div><span>YOUR JOURNAL</span><b>By date</b></div><button onClick={()=>setSidebarOpen(false)} aria-label="Hide journal list">×</button></div><label className="journal-search">Search words<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a word or phrase"/></label><label className="journal-date-filter">Jump to date<input type="date" value={dateFilter} onChange={e=>{const next=e.target.value;setDateFilter(next);if(!next)return;setSelectedDate(next);const match=journals.find(j=>j.note_date===next);if(match)openJournal(match);else setActiveId("")}}/></label><button className="journal-today" onClick={createOrOpenToday}>＋ Start journal for selected date</button><div className="journal-date-list">{filtered.map(j=><button key={j.id} className={`journal-date-card ${active?.id===j.id?"selected":""}`} onClick={()=>openJournal(j)}><time>{new Date(j.note_date+"T12:00:00").toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short",year:"numeric"})}</time><b>{j.title||"Daily entry"}</b><small>{j.pages.length} {j.pages.length===1?"page":"pages"} · {(j.pages.map(p=>`${p.typed_text} ${p.handwriting_text}`).join(" ").trim().slice(0,58))||"No text preview"}</small></button>)}{!filtered.length&&<p className="journal-no-results">No journals match this date or search.</p>}</div>{active&&<div className="journal-page-strip"><div className="journal-strip-heading">PAGES IN THIS JOURNAL</div>{active.pages.map((page,index)=><button key={page.id} className="journal-strip-page" onClick={()=>document.getElementById(`journal-page-${page.id}`)?.scrollIntoView({behavior:"smooth",block:"start"})}><span>{String(index+1).padStart(2,"0")}</span><b>Page {index+1}</b><small>{(page.typed_text||page.handwriting_text||"Blank page").slice(0,38)}</small></button>)}<button className="journal-strip-add" onClick={addPage}>＋ Add page</button></div>}</aside>}
       <main className={`journal-writing ${sidebarOpen?"with-sidebar":""}`}>

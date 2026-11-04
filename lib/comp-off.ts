@@ -38,7 +38,7 @@ export function normalizeCompOffEntries(value: unknown): CompOffEntry[] {
     .map((entry: any) => ({
       ...entry,
       notes: typeof entry.notes === "string" ? entry.notes : "",
-      ...(entry.type === "earned" ? { expiresAt: isCompOffISODate(entry.expiresAt) ? entry.expiresAt : compOffExpiryDate(entry.date) } : {}),
+      ...(entry.type === "earned" ? { expiresAt: compOffExpiryDate(entry.date) } : {}),
     }));
   const earned = entries.filter(entry => entry.type === "earned").sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
   const earnedById = new Map(earned.map(entry => [entry.id, entry]));
@@ -52,6 +52,11 @@ export function normalizeCompOffEntries(value: unknown): CompOffEntry[] {
     if (existingIsUsable && existing) {
       consumed.add(existing.id);
       linked.set(usage.id, existing.id);
+      continue;
+    }
+    // An explicit but invalid link is not a legacy row. Never redirect it to another earned entry.
+    if (usage.earnedEntryId) {
+      linked.set(usage.id, usage.earnedEntryId);
       continue;
     }
     const candidate = earned.find(entry =>

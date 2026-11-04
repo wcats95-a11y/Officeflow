@@ -1,6 +1,6 @@
 import { mergeStarterTaskTypes, mergeMatterTypeNames, normalizeTaskActYearFields } from "./income-tax-matters.ts";
 import { normalizeCompOffEntries } from "./comp-off.ts";
-import { mergePresetHolidays, HOLIDAY_PRESET_VERSION } from "./officeflow-holidays.ts";
+import { mergePresetHolidays, inferHolidayPresetVersion, HOLIDAY_PRESET_VERSION } from "./officeflow-holidays.ts";
 
 export const OFFICEFLOW_BACKUP_SCHEMA_VERSION = 2.8;
 const MAX_SUPPORTED_BACKUP_SCHEMA_VERSION = OFFICEFLOW_BACKUP_SCHEMA_VERSION;
@@ -12,6 +12,10 @@ const TASK_STATUSES = new Set([
 const PRIORITIES = new Set(["Urgent","High","Medium","Low"]);
 const ACTS = new Set(["Income-tax Act, 1961","Income-tax Act, 2025"]);
 const HOLIDAY_STATUSES = new Set(["karnataka-official","national","karnataka-fixed","central-reference","restricted-reference","provisional","office-confirmed"]);
+const REPLY_STATUSES = new Set(["Not started","Partially replied","Fully replied"]);
+const HEARING_OUTCOMES = new Set(["Scheduled","Attended","Adjourned","Order reserved","Order passed"]);
+function optionalISODate(data:Record<string,any>,key:string):boolean{return !(key in data)||data[key]===""||validDate(data[key]);}
+function optionalISODateTime(data:Record<string,any>,key:string):boolean{return !(key in data)||data[key]===""||(typeof data[key]==="string"&&Number.isFinite(Date.parse(data[key])));}
 
 function isRecord(value: unknown): value is Record<string, any> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -65,7 +69,7 @@ export function isValidOfficeFlowBackup(value: unknown): boolean {
   if ("juniorDirectory" in value && (!isRecord(value.juniorDirectory) || Object.values(value.juniorDirectory).some(name=>typeof name!=="string"))) return false;
   if ("clientDirectory" in value && (!Array.isArray(value.clientDirectory) || !value.clientDirectory.every((client:any)=>isRecord(client)&&typeof client.name==="string"&&optionalString(client,"pan")&&optionalString(client,"entityType")&&optionalString(client,"groupId")))) return false;
   if (!optionalArray(value,"clientGroups",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.name==="string"&&Array.isArray(item.clientNames)&&item.clientNames.every((name:any)=>typeof name==="string"))) return false;
-  if (!optionalArray(value,"matterRounds",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.matterId==="string"&&typeof item.roundType==="string"&&Number.isFinite(item.sequenceNumber)&&Array.isArray(item.attachments)&&item.attachments.every((a:any)=>isRecord(a)&&typeof a.name==="string"&&optionalString(a,"dataUrl")&&optionalString(a,"url")))) return false;
+  if (!optionalArray(value,"matterRounds",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.matterId==="string"&&typeof item.roundType==="string"&&Number.isInteger(item.sequenceNumber)&&item.sequenceNumber>0&&REPLY_STATUSES.has(item.replyStatus)&&(!("hearingOutcome" in item)||HEARING_OUTCOMES.has(item.hearingOutcome))&&optionalISODate(item,"noticeDate")&&optionalISODate(item,"dueDate")&&optionalISODate(item,"nextHearingDate")&&optionalISODateTime(item,"hearingAt")&&Array.isArray(item.attachments)&&item.attachments.every((a:any)=>isRecord(a)&&typeof a.name==="string"&&optionalString(a,"dataUrl")&&optionalString(a,"url")))) return false;
   if (!optionalArray(value,"matterTaskTypes",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.matterType==="string"&&typeof item.taskType==="string"&&(!("act" in item)||ACTS.has(item.act))&&(!("active" in item)||typeof item.active==="boolean")&&(!("sortOrder" in item)||Number.isFinite(item.sortOrder)))) return false;
   if (!optionalArray(value,"matterTypeNames",(item:any)=>typeof item==="string")) return false;
   if (!optionalArray(value,"compOffEntries",(item:any)=>isRecord(item)&&typeof item.id==="string"&&(item.type==="earned"||item.type==="used")&&validDate(item.date)&&optionalString(item,"notes")&&optionalString(item,"earnedEntryId")&&(!("expiresAt" in item)||validDate(item.expiresAt)))) return false;
@@ -102,7 +106,7 @@ export function migrateOfficeFlowBackup(value: unknown): Record<string, any> {
     uploadedDocuments:Array.isArray(task.uploadedDocuments)?task.uploadedDocuments:[],
     activity:Array.isArray(task.activity)?task.activity:[],
   }));
-  const presetVersion=Number(data.compOffHolidayPresetVersion??(data.schemaVersion>=2.7?3:0));
+  const presetVersion=Number.isInteger(data.compOffHolidayPresetVersion)?data.compOffHolidayPresetVersion:inferHolidayPresetVersion(data.compOffHolidays);
   const legacyTaskTypes=Array.isArray(data.matterTaskTypes)?data.matterTaskTypes.map((item:any,index:number)=>({...item,act:ACTS.has(item.act)?item.act:"Income-tax Act, 1961",active:typeof item.active==="boolean"?item.active:true,sortOrder:Number.isFinite(item.sortOrder)?item.sortOrder:index})):[];
   return {
     ...data,

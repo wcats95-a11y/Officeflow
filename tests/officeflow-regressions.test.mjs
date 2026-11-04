@@ -119,3 +119,37 @@ test("recurring meetings expand with month-end clamping and conflicts check ever
   assert.equal(meetingTimesOverlap({date:"2027-01-01",start:"10:00",duration:60},{date:"2027-01-01",start:"10:30",duration:30}),true);
   assert.equal(hasMeetingConflict([{date:"2027-01-08",start:"10:00",duration:60}],{date:"2027-01-01",start:"10:30",duration:30,recurrence:"Weekly"},2),true);
 });
+
+test("comp-off normalization recalculates mismatched expiry and never reassigns an invalid explicit usage link",()=>{
+  const rows=normalizeCompOffEntries([
+    {id:"e1",type:"earned",date:"2026-01-31",expiresAt:"2030-12-31"},
+    {id:"e2",type:"earned",date:"2026-04-01",expiresAt:"2026-07-01"},
+    {id:"u1",type:"used",date:"2026-05-01",earnedEntryId:"e1"},
+  ]);
+  assert.equal(rows.find(x=>x.id==="e1").expiresAt,"2026-04-30");
+  assert.equal(rows.find(x=>x.id==="u1").earnedEntryId,"e1");
+  assert.ok(getCompOffAvailableEntries(rows,"2026-05-01").some(x=>x.id==="e2"));
+});
+test("incidental GST text in a direct-tax description does not change task classification",()=>{
+  assert.equal(isIncomeTaxTaskLike({taskType:"Assessment",matterType:"Assessment",category:"Direct-tax litigation",description:"Reconcile GST references mentioned in the income-tax notice"}),true);
+  assert.equal(isIncomeTaxTaskLike({taskType:"GST return",category:"GST"}),false);
+});
+test("matter-round backup rejects zero/fractional sequence numbers, invalid dates and unknown statuses",()=>{
+  const base={schemaVersion:2.7,tasks:[],matterRounds:[],juniorDirectory:{},clientDirectory:[],compOffEntries:[],compOffHolidays:[],meetings:[],auditLog:[]};
+  const round={id:"r",matterId:"m",roundType:"Assessment",sequenceNumber:1,replyStatus:"Not started",attachments:[]};
+  assert.equal(isValidOfficeFlowBackup({...base,matterRounds:[round]}),true);
+  assert.equal(isValidOfficeFlowBackup({...base,matterRounds:[{...round,sequenceNumber:0}]}),false);
+  assert.equal(isValidOfficeFlowBackup({...base,matterRounds:[{...round,sequenceNumber:1.5}]}),false);
+  assert.equal(isValidOfficeFlowBackup({...base,matterRounds:[{...round,dueDate:"2026-02-30"}]}),false);
+  assert.equal(isValidOfficeFlowBackup({...base,matterRounds:[{...round,replyStatus:"Unknown"}]}),false);
+});
+test("2027 central and Karnataka holiday references remain distinct and provisional dates are not fixed",()=>{
+  const holidays=presetHolidays2026_2027();
+  const byDate=(date)=>holidays.find(item=>item.date===date);
+  assert.equal(byDate("2027-05-01")?.status,"provisional");
+  assert.equal(byDate("2027-11-01")?.status,"provisional");
+  assert.equal(byDate("2027-10-09")?.status,"central-reference");
+  assert.equal(byDate("2027-10-10")?.status,"provisional");
+  assert.equal(byDate("2027-10-29")?.status,"central-reference");
+  assert.equal(byDate("2027-10-30")?.status,"provisional");
+});

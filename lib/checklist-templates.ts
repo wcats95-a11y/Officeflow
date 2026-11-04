@@ -119,6 +119,14 @@ const checklistTemplates: Record<string, string[]> = {
     "Review & Filing — Review the requested relief, obtain approval, file the petition and preserve acknowledgement.",
     "Hearing & Compliance Monitoring — Track the decision and recovery, comply with conditions and update the client.",
   ],
+  "penalty notice": [
+    "Notice, penalty provision and underlying order — Obtain the penalty notice, charge, underlying assessment/order and service evidence.",
+    "Facts, limitation and merits review — Verify jurisdiction, limitation, satisfaction/recorded reasons and the statutory basis for penalty.",
+    "Evidence and client information — Request and reconcile returns, books, prior submissions, explanations and supporting evidence.",
+    "Draft point-wise penalty response — Address each proposed charge, facts, legal grounds and applicable defences with indexed annexures.",
+    "Independent review and client approval — Review facts, law, calculations and evidence; resolve comments and obtain approval.",
+    "Filing and acknowledgement — Submit the reply, preserve acknowledgement and track hearing, order and further remedies.",
+  ],
   "tax opinion": [
     "Question, Scope & Assumptions — Define the question, relevant facts, years, scope, assumptions and documents required.",
     "Legal Research & Fact Verification — Verify records and research applicable provisions, rules, circulars and judicial authorities.",
@@ -166,6 +174,7 @@ export function checklistTemplateForTaskType(taskType: string): string {
   if (/itr|return filing/i.test(key)) return checklistTemplateForTaskType("Income Tax Return Filing");
   if (/advisory/i.test(key)) return checklistTemplateForTaskType("Tax Advisory");
   if (/opinion/i.test(key)) return checklistTemplateForTaskType("Tax Opinion");
+  if (/penalty/i.test(key)) return checklistTemplateForTaskType("Penalty Notice");
   if (/other/i.test(key)) return checklistTemplateForTaskType("Other Direct Tax Assignments");
   return "";
 }

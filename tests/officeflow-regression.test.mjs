@@ -27,7 +27,7 @@ import {
   mergePresetHolidays,
   inferHolidayPresetVersion,
 } from "../lib/officeflow-holidays.ts";
-import { suggestNoticeDocuments, buildNoticeChecklist, extractNoticeDueDate } from "../lib/officeflow-notice.ts";
+import { suggestNoticeDocuments, buildNoticeChecklist, extractNoticeDueDate, classifyIncomeTaxNotice, combineNoticeChecklist } from "../lib/officeflow-notice.ts";
 import { getDiaryDateRange, indiaDateFromTimestamp, indiaLocalDateTimeToISO } from "../lib/officeflow-date.ts";
 import {
   OFFICEFLOW_BACKUP_SCHEMA_VERSION,
@@ -263,19 +263,36 @@ test("Act-specific task year fields never leak across Acts", () => {
   const invalid2025=normalizeTaskActYearFields({applicableAct:"Income-tax Act, 2025",taxYear:"2025-26"});
   assert.equal(invalid2025.taxYear,"2025-26");
 });
-test("legacy unversioned five-date holiday arrays get expanded presets; v2 removals remain removed", () => {
+test("unversioned early fixed-date holiday arrays migrate as v1 and preserve removals and empty calendars", () => {
   const early=["2026-01-26","2026-05-01","2026-08-15","2026-10-02","2026-11-01","2027-01-26","2027-05-01","2027-08-15","2027-10-02","2027-11-01"].map(date=>({date,name:date}));
-  assert.equal(inferHolidayPresetVersion(early),0);
+  assert.equal(inferHolidayPresetVersion(early),1);
   const earlyWithCustom=[...early,{date:"2026-12-31",name:"Office holiday"}];
-  assert.equal(inferHolidayPresetVersion(earlyWithCustom),0);
-  const migratedEarly=mergePresetHolidays(early,inferHolidayPresetVersion(early));
-  assert.ok(migratedEarly.some(x=>x.date==="2026-01-01"&&x.status==="restricted-reference"));
-  assert.ok(migratedEarly.some(x=>x.date==="2027-03-10"&&x.status==="central-reference"));
-  const v2=[
-    "2026-01-15","2026-01-26","2026-03-19","2026-03-21","2026-03-31","2026-04-03","2026-04-14","2026-04-20","2026-05-01","2026-05-28","2026-06-26","2026-08-15","2026-08-26","2026-09-14","2026-10-02","2026-10-20","2026-10-21","2026-11-10","2026-11-27","2026-12-25","2027-01-26","2027-05-01","2027-08-15","2027-10-02","2027-11-01","2027-12-25"
-  ].filter(x=>x!=="2026-01-15").map(date=>({date,name:date}));
+  assert.equal(inferHolidayPresetVersion(earlyWithCustom),1);
+  const removed=early.filter(item=>item.date!=="2026-01-26");
+  const migrated=mergePresetHolidays(removed,1);
+  assert.ok(!migrated.some(item=>item.date==="2026-01-26"));
+  assert.ok(migrated.some(item=>item.date==="2027-03-10"&&item.status==="central-reference"));
+  assert.deepEqual(mergePresetHolidays([],inferHolidayPresetVersion([])),[]);
+  const v2=["2026-01-15","2026-01-26","2026-03-19","2026-03-21","2026-03-31","2026-04-03","2026-04-14","2026-04-20","2026-05-01","2026-05-28","2026-06-26","2026-08-15","2026-08-26","2026-09-14","2026-10-02","2026-10-20","2026-10-21","2026-11-10","2026-11-27","2026-12-25","2027-01-26","2027-05-01","2027-08-15","2027-10-02","2027-11-01","2027-12-25"].filter(x=>x!=="2026-01-15").map(date=>({date,name:date}));
   assert.equal(inferHolidayPresetVersion(v2),2);
-  assert.equal(mergePresetHolidays(v2,inferHolidayPresetVersion(v2)).some(x=>x.date==="2026-01-15"),false);
+});
+test("holiday inference identifies v3 and v4-to-v5 only updates statuses without restoring removals", () => {
+  const v3=["2026-01-26","2027-03-06","2027-03-10"].map(date=>({date,name:date}));
+  assert.equal(inferHolidayPresetVersion(v3),3);
+  const v4=[{date:"2027-05-01",name:"May Day",status:"karnataka-fixed"},{date:"2027-11-01",name:"Rajyotsava",status:"karnataka-fixed"}];
+  const migrated=mergePresetHolidays(v4,4);
+  assert.equal(migrated.length,2);
+  assert.ok(migrated.every(item=>item.status==="provisional"));
+  assert.equal(HOLIDAY_PRESET_VERSION,5);
+});
+test("notice classification prioritises TDS/TCS and Penalty and combines reviewable suggestions with standard templates", () => {
+  assert.equal(classifyIncomeTaxNotice("Show cause notice for TDS default under TRACES").taskType,"TDS/TCS default notice");
+  assert.equal(classifyIncomeTaxNotice("Penalty show cause notice u/s 270A").taskType,"Penalty notice");
+  assert.equal(classifyIncomeTaxNotice("Show cause notice u/s 143(2)").taskType,"Notice u/s 143(2)");
+  const combined=combineNoticeChecklist("[ ] Standard task review\n[ ] File reply","Show-cause notice","Please provide bank statement and Form 26AS");
+  assert.ok(combined.includes("Standard task review"));
+  assert.ok(combined.includes("Suggested document — confirm before requesting: Bank statements for the relevant period"));
+  assert.ok(combined.includes("Suggested document — confirm before requesting: Form 26AS"));
 });
 test("Diary ranges and activity timestamps use Asia/Kolkata calendar dates", () => {
   assert.deepEqual(getDiaryDateRange("2026-11-03","month"),["2026-11-01","2026-11-30"]);

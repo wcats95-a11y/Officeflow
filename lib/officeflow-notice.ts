@@ -67,3 +67,43 @@ export function buildNoticeChecklist(kind: string, noticeText: string): string[]
   const suggestions = suggestNoticeDocuments(noticeText).map(name => "Suggested document — confirm before requesting: " + name);
   return [...selected, ...suggestions];
 }
+
+export type NoticeClassification = { kind: string; taskType: string; matterType: string };
+
+/** Classify TDS/TCS and penalty first, then preserve section-specific task types. */
+export function classifyIncomeTaxNotice(noticeText: string): NoticeClassification {
+  const text=String(noticeText||"").toLowerCase();
+  if (/\btds\b|\btcs\b|tax deducted at source|tax collected at source|\btraces\b/.test(text))
+    return {kind:"TDS/TCS notice",taskType:"TDS/TCS default notice",matterType:"Compliance"};
+  if (/penalty/.test(text))
+    return {kind:"Penalty notice",taskType:"Penalty notice",matterType:"Penalty"};
+  if (/income.?tax appellate tribunal|\bitat\b/.test(text))
+    return {kind:"ITAT notice",taskType:"ITAT appeal",matterType:"ITAT appeal"};
+  if (/commissioner of income.?tax.*appeal|\bcit\(a\)|nf[a]?c|form.?35/.test(text))
+    return {kind:"First appeal notice",taskType:"Filing appeal",matterType:"Appeal"};
+  if (/143\s*\(\s*2\s*\)/.test(text))
+    return {kind:"Scrutiny assessment notice",taskType:"Notice u/s 143(2)",matterType:"Assessment"};
+  if (/142\s*\(\s*1\s*\)/.test(text))
+    return {kind:"Information request notice",taskType:"Notice u/s 142(1)",matterType:"Assessment"};
+  if (/148a/.test(text))
+    return {kind:"Reassessment notice",taskType:"Notice u/s 148A",matterType:"Assessment"};
+  if (/148/.test(text))
+    return {kind:"Reassessment notice",taskType:"Notice u/s 148",matterType:"Assessment"};
+  if (/143\s*\(\s*1\s*\)/.test(text))
+    return {kind:"Direct-tax notice",taskType:"Intimation u/s 143(1)",matterType:"Assessment"};
+  if (/show.?cause/.test(text))
+    return {kind:"Show-cause notice",taskType:"Show cause notice (SCN)",matterType:"Assessment"};
+  if (/reassessment/.test(text))
+    return {kind:"Reassessment notice",taskType:"Assessment",matterType:"Assessment"};
+  return {kind:"Direct-tax notice",taskType:"Assessment",matterType:"Assessment"};
+}
+
+/** Keep the task-type workflow and append notice-derived documents for human review. */
+export function combineNoticeChecklist(standardTemplate: string, kind: string, noticeText: string): string {
+  const noticeItems=buildNoticeChecklist(kind,noticeText);
+  const standard=standardTemplate.trim()
+    ? standardTemplate.split("\n").map(line=>line.trim()).filter(Boolean)
+    : noticeItems.filter(item=>!item.startsWith("Suggested document —")).map(item=>"[ ] "+item);
+  const suggestions=noticeItems.filter(item=>item.startsWith("Suggested document —")).map(item=>"[ ] "+item);
+  return [...new Set([...standard,...suggestions])].join("\n");
+}
