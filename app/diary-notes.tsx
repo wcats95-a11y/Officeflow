@@ -13,7 +13,7 @@ async function getHandwritingReader() {
   if (!handwritingReader) handwritingReader = import("@huggingface/transformers").then(({ pipeline, env }) => {
     env.allowLocalModels = false;
     env.useBrowserCache = true;
-    env.backends.onnx.wasm.numThreads = 1;
+    if (env.backends.onnx.wasm) env.backends.onnx.wasm.numThreads = 1;
     return pipeline("image-to-text", "Xenova/trocr-small-handwritten");
   }).catch(error => { handwritingReader = null; throw error; });
   return handwritingReader;
