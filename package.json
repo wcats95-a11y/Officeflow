@@ -1,18 +1,20 @@
 {
   "name": "officeflow",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm test && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs"
   },
   "dependencies": {
     "next": "16.4.3",
     "react": "19.2.9",
     "react-dom": "19.2.9",
     "@supabase/supabase-js": "2.89.0",
+    "@huggingface/transformers": "^3.8.1",
     "pdfjs-dist": "4.10.38"
   },
   "devDependencies": {
