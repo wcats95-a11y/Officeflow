@@ -1,4 +1,4 @@
-export type JournalPdfStroke = { points: [number, number, number?][]; color: string; width: number; erase?: boolean };
+export type JournalPdfStroke = { points: [number, number, number?][]; color: string; width: number; erase?: boolean; shape?: "rectangle" | "ellipse" | "line" };
 export type JournalPdfTodo = { id: string; line: number; checked: boolean };
 export type JournalPdfPage = { id: string; typed_text: string; strokes: JournalPdfStroke[]; todos: JournalPdfTodo[] };
 export type JournalPdfEntry = { note_date: string; title: string; pages: JournalPdfPage[] };
@@ -21,7 +21,18 @@ function inkPage(entry: JournalPdfEntry, page: JournalPdfPage, index: number): s
     commands.push(`${color.map(number).join(" ")} RG ${number(Math.max(0.6, stroke.width * 0.65))} w 1 J 1 j`);
     const point = (value: [number, number, number?]): [number, number] => [x0 + Math.max(0, Math.min(1, value[0])) * width, yTop - Math.max(0, Math.min(1, value[1])) * height];
     const first = point(stroke.points[0]);
-    if (stroke.points.length === 1) commands.push(`${number(first[0])} ${number(first[1])} m ${number(first[0] + 0.1)} ${number(first[1] + 0.1)} l S`);
+    if (stroke.shape && stroke.points.length >= 2) {
+      const last = point(stroke.points.at(-1)!);
+      const left = Math.min(first[0], last[0]), right = Math.max(first[0], last[0]);
+      const bottom = Math.min(first[1], last[1]), top = Math.max(first[1], last[1]);
+      if (stroke.shape === "line") commands.push(`${number(first[0])} ${number(first[1])} m ${number(last[0])} ${number(last[1])} l S`);
+      else if (stroke.shape === "rectangle") commands.push(`${number(left)} ${number(bottom)} ${number(right - left)} ${number(top - bottom)} re S`);
+      else {
+        const cx = (left + right) / 2, cy = (bottom + top) / 2, rx = (right - left) / 2, ry = (top - bottom) / 2, k = 0.55228475;
+        commands.push(`${number(cx + rx)} ${number(cy)} m ${number(cx + rx)} ${number(cy + k * ry)} ${number(cx + k * rx)} ${number(cy + ry)} ${number(cx)} ${number(cy + ry)} c ${number(cx - k * rx)} ${number(cy + ry)} ${number(cx - rx)} ${number(cy + k * ry)} ${number(cx - rx)} ${number(cy)} c ${number(cx - rx)} ${number(cy - k * ry)} ${number(cx - k * rx)} ${number(cy - ry)} ${number(cx)} ${number(cy - ry)} c ${number(cx + k * rx)} ${number(cy - ry)} ${number(cx + rx)} ${number(cy - k * ry)} ${number(cx + rx)} ${number(cy)} c S`);
+      }
+    }
+    else if (stroke.points.length === 1) commands.push(`${number(first[0])} ${number(first[1])} m ${number(first[0] + 0.1)} ${number(first[1] + 0.1)} l S`);
     else {
       commands.push(`${number(first[0])} ${number(first[1])} m`);
       for (const value of stroke.points.slice(1)) { const next = point(value); commands.push(`${number(next[0])} ${number(next[1])} l`); }
