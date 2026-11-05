@@ -153,6 +153,13 @@ export function assessmentYearFromFinancialYear(financialYear:string):string{
   return next+"-"+String(next+1).slice(-2);
 }
 
+export function financialYearFromAssessmentYear(assessmentYear:string):string{
+  const normalized=normalizeYearRange(assessmentYear);
+  if(!normalized)return "";
+  const previous=Number(normalized.slice(0,4))-1;
+  return previous+"-"+String(previous+1).slice(-2);
+}
+
 export function validateActYears(act:string,financialYear:string,assessmentYear:string,taxYear:string):string|null{
   if(act==="Income-tax Act, 2025"){
     if(!isValidTaxYear(taxYear))return "Select a valid tax year, for example 2026-27.";
@@ -187,8 +194,10 @@ export function detectIncomeTaxYears(text:string):{financialYear?:string;assessm
   if(fy)result.financialYear=normalizeYearRange(clean(fy[1])||"")||clean(fy[1]);
   if(ty)result.taxYear=normalizeTaxYear(clean(ty[1])||"")||clean(ty[1]);
   if(!result.financialYear&&result.assessmentYear){
-    const normalized=normalizeYearRange(result.assessmentYear);
-    if(normalized)result.financialYear=(Number(normalized.slice(0,4))-1)+"-"+String(Number(normalized.slice(0,4))).slice(-2);
+    result.financialYear=financialYearFromAssessmentYear(result.assessmentYear)||undefined;
+  }
+  if(!result.assessmentYear&&result.financialYear){
+    result.assessmentYear=assessmentYearFromFinancialYear(result.financialYear)||undefined;
   }
   return result;
 }

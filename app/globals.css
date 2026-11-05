@@ -1422,4 +1422,33 @@ input,select,textarea{font-size:16px}
 .journal-pdf-viewer iframe{flex:1;width:100%;min-height:0;border:0;background:#e8ece9}
 @media(max-width:760px){.journal-end-day{grid-column:1/-1;width:100%;min-height:42px}.journal-book-stage{padding:8px 7px 3px}.journal-book-page{width:100%;max-height:100%}.journal-fullscreen.is-fullscreen .journal-canvas{height:min(61vh,720px)}.journal-book-controls{width:calc(100% - 14px);margin:3px auto 6px;padding:6px}.journal-book-controls button{padding:8px 10px;font-size:11px}.journal-book-controls span{font-size:10px}.journal-pdf-backdrop{padding:0}.journal-pdf-viewer{height:100dvh;border-radius:0}.journal-pdf-viewer header{padding:7px 8px}.journal-pdf-viewer header b{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}.journal-pdf-viewer a,.journal-pdf-viewer header button{padding:8px;font-size:10px}}
 @media(prefers-reduced-motion:reduce){.journal-book-page.flip-next,.journal-book-page.flip-previous{animation-duration:.01ms}}
-
+/* Compact, collapsible workspace navigation and task-form controls. */
+.desktop-nav{display:flex;flex-direction:column;gap:7px;min-height:0;overflow:auto}
+.sidebar-nav-group{border:1px solid transparent;border-radius:10px;overflow:hidden}
+.sidebar-nav-group[open]{background:color-mix(in srgb,var(--bg) 52%,var(--surface));border-color:var(--line)}
+.sidebar-nav-group>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;list-style:none;cursor:pointer;padding:10px 12px;color:var(--muted);font-size:11px;font-weight:700}
+.sidebar-nav-group>summary::-webkit-details-marker{display:none}
+.sidebar-nav-group>summary span{font-size:13px;transition:transform .16s ease}
+.sidebar-nav-group[open]>summary span{transform:rotate(180deg)}
+.sidebar-nav-group>div{padding:0 5px 5px}
+.sidebar-nav-group .nav-item{margin:1px 0;padding:9px 10px;font-size:11px}
+.task-view-switch{display:inline-flex;align-items:center;gap:2px;padding:3px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
+.task-view-switch button{border:0;border-radius:6px;padding:7px 12px;background:transparent;color:var(--muted);font-size:10px;font-weight:700}
+.task-view-switch button.selected{background:var(--purple-soft);color:var(--purple)}
+.task-checklist-field{min-width:0}
+.task-checklist-field>.field-hint{margin:5px 0 9px;color:var(--muted);font-size:10px;line-height:1.45}
+.task-checklist-editor{display:grid;gap:7px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.task-checklist-empty{padding:8px 4px;color:var(--muted);font-size:11px}
+.task-checklist-row{display:grid;grid-template-columns:30px 18px minmax(0,1fr) 30px;align-items:center;gap:8px;min-width:0}
+.task-checklist-number{color:var(--muted);font-size:9px;font-weight:700;text-align:center}
+.task-checklist-row input[type=checkbox]{width:16px;height:16px;margin:0;accent-color:var(--purple)}
+.task-checklist-row input[type=text]{min-width:0;width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);font-size:11px}
+.task-checklist-remove{width:30px;height:32px;border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:20px}
+.task-checklist-remove:hover{background:var(--bg);color:#c44}
+.task-checklist-add{justify-self:start;border:1px dashed color-mix(in srgb,var(--purple) 35%,var(--line));border-radius:7px;padding:8px 10px;background:var(--purple-soft);color:var(--purple);font-size:10px;font-weight:700}
+@media(max-width:560px){.task-view-switch button{padding:8px 10px}.task-checklist-row{grid-template-columns:24px 18px minmax(0,1fr) 28px;gap:5px}.task-checklist-row input[type=text]{padding:9px 7px}.task-checklist-editor{padding:8px}}
+.task-advanced-details{min-width:0;margin:8px 0;border:1px solid var(--line);border-radius:9px;background:color-mix(in srgb,var(--surface) 88%,var(--bg));overflow:hidden}
+.task-advanced-details>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;list-style:none;padding:10px 12px;color:var(--muted);font-size:11px;font-weight:700}
+.task-advanced-details>summary::-webkit-details-marker{display:none}
+.task-advanced-details>summary span{font-size:9px;font-weight:500;color:var(--muted)}
+.task-advanced-details[open]>label,.task-advanced-details[open]>.junior-picker-field{margin:0 12px 12px}

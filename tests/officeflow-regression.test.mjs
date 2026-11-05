@@ -17,6 +17,7 @@ import {
   normalizeTaskActYearFields,
   detectIncomeTaxYears,
   assessmentYearFromFinancialYear,
+  financialYearFromAssessmentYear,
   isIncomeTaxTaskLike,
   nextRoundSequence,
   duplicateRound,
@@ -103,6 +104,7 @@ test("Act 1961 and Act 2025 task catalogues stay separate and both load from an 
 
 test("FY/AY and Tax Year validation is Act-specific", () => {
   assert.equal(assessmentYearFromFinancialYear("2025-26"),"2026-27");
+  assert.equal(financialYearFromAssessmentYear("2026-27"),"2025-26");
   assert.equal(validateActYears("Income-tax Act, 1961","2025-26","2026-27",""),null);
   assert.match(validateActYears("Income-tax Act, 1961","2025-26","2025-26","")||"",/do not match/);
   assert.equal(validateActYears("Income-tax Act, 2025","","","2026-27"),null);
@@ -111,6 +113,8 @@ test("FY/AY and Tax Year validation is Act-specific", () => {
   assert.equal(detected.financialYear,"2025-26");
   assert.equal(detected.assessmentYear,"2026-27");
   assert.equal(detected.taxYear,"2026-27");
+  assert.deepEqual(detectIncomeTaxYears("Notice for FY 2024-25"),{financialYear:"2024-25",assessmentYear:"2025-26"});
+  assert.deepEqual(detectIncomeTaxYears("Notice for AY 2025-26"),{assessmentYear:"2025-26",financialYear:"2024-25"});
 });
 
 test("TDS/TCS remains in direct-tax classification while GST is excluded", () => {
@@ -325,4 +329,3 @@ test("meeting conflicts include overlaps across midnight and allow exact end-to-
   assert.equal(meetingTimesOverlap({date:"2027-01-01",start:"23:30",duration:120},{date:"2027-01-02",start:"00:30",duration:30}),true);
   assert.equal(meetingTimesOverlap({date:"2027-01-01",start:"23:00",duration:60},{date:"2027-01-02",start:"00:00",duration:30}),false);
 });
-
