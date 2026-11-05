@@ -9,7 +9,7 @@ test("task form normalizes create and edit paths and uses Act-specific WhatsApp 
   assert.doesNotMatch(page,/financialYear:t\.financialYear\|\|"2025-26"/);
   assert.match(page,/Tax year: /);
   assert.match(page,/Financial year \/ assessment year:/);
-  assert.match(page,/combineNoticeChecklist\(checklistTemplateForTaskType\(taskType\),kind,text\)/);
+  assert.match(page,/combineNoticeChecklist\(checklistTemplateForTaskType\(taskType\)\|\|"",kind,text\)/);
 });
 test("earned comp-off date edits validate qualifying days and ask before reference holidays",()=>{
   const page=read("../app/page.tsx");
@@ -19,9 +19,10 @@ test("earned comp-off date edits validate qualifying days and ask before referen
 test("journal cloud failures are visible and local recovery keys are account-scoped",()=>{
   const diary=read("../app/diary-notes.tsx");
   assert.match(diary,/:user:\$\{userId\}/);
-  assert.match(diary,/const \{error\}=await supabase\.from\("officeflow_notes"\)\.upsert/);
+  assert.match(diary,/from\("officeflow_notes"\)\.upsert\(rows/);
   assert.match(diary,/Cloud save failed/);
-  assert.match(diary,/saveError\|\|"All changes saved"/);
+  assert.match(diary,/All changes saved/);
+  assert.match(diary,/role="alert"/);
   assert.doesNotMatch(diary,/localStorage\.getItem\(storageKey\)/);
 });
 test("journal migration keeps duplicate-date legacy records without a destructive unique index",()=>{
@@ -44,3 +45,4 @@ test("local and cloud holiday hydration share inference when metadata is absent 
   assert.ok(page.includes('localStorage.removeItem("officeflow-staff-credential-register")'));
   assert.doesNotMatch(page,/localStorage\.getItem\("officeflow-staff-credential-register"\)/);
 });
+

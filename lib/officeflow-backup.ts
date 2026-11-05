@@ -67,7 +67,7 @@ export function isValidOfficeFlowBackup(value: unknown): boolean {
 
   // Missing fields are migrated for old backups; explicit null/invalid values are rejected.
   if ("juniorDirectory" in value && (!isRecord(value.juniorDirectory) || Object.values(value.juniorDirectory).some(name=>typeof name!=="string"))) return false;
-  if ("clientDirectory" in value && (!Array.isArray(value.clientDirectory) || !value.clientDirectory.every((client:any)=>isRecord(client)&&typeof client.name==="string"&&optionalString(client,"pan")&&optionalString(client,"entityType")&&optionalString(client,"groupId")))) return false;
+  if ("clientDirectory" in value && (!Array.isArray(value.clientDirectory) || !value.clientDirectory.every((client:any)=>isRecord(client)&&typeof client.name==="string"&&optionalString(client,"pan")&&optionalString(client,"entityType")&&optionalString(client,"groupId")&&optionalString(client,"tan")&&optionalString(client,"gstin")&&(!("monthlyRetainer" in client)||(Number.isFinite(client.monthlyRetainer)&&client.monthlyRetainer>=0))&&(!("gstRate" in client)||(Number.isFinite(client.gstRate)&&client.gstRate>=0&&client.gstRate<=100))&&(!("gstTreatment" in client)||["unconfigured","cgst_sgst","igst","no_gst"].includes(client.gstTreatment))))) return false;
   if (!optionalArray(value,"clientGroups",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.name==="string"&&Array.isArray(item.clientNames)&&item.clientNames.every((name:any)=>typeof name==="string"))) return false;
   if (!optionalArray(value,"matterRounds",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.matterId==="string"&&typeof item.roundType==="string"&&Number.isInteger(item.sequenceNumber)&&item.sequenceNumber>0&&REPLY_STATUSES.has(item.replyStatus)&&(!("hearingOutcome" in item)||HEARING_OUTCOMES.has(item.hearingOutcome))&&optionalISODate(item,"noticeDate")&&optionalISODate(item,"dueDate")&&optionalISODate(item,"nextHearingDate")&&optionalISODateTime(item,"hearingAt")&&Array.isArray(item.attachments)&&item.attachments.every((a:any)=>isRecord(a)&&typeof a.name==="string"&&optionalString(a,"dataUrl")&&optionalString(a,"url")))) return false;
   if (!optionalArray(value,"matterTaskTypes",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.matterType==="string"&&typeof item.taskType==="string"&&(!("act" in item)||ACTS.has(item.act))&&(!("active" in item)||typeof item.active==="boolean")&&(!("sortOrder" in item)||Number.isFinite(item.sortOrder)))) return false;
@@ -128,3 +128,4 @@ export function migrateOfficeFlowBackup(value: unknown): Record<string, any> {
     remindersEnabled:typeof data.remindersEnabled==="boolean"?data.remindersEnabled:false,
   };
 }
+

@@ -13,6 +13,6 @@ where pages = '[]'::jsonb;
 alter table public.officeflow_notes
   add constraint officeflow_notes_pages_array check (jsonb_typeof(pages) = 'array');
 
--- Preserve any legacy duplicate-date journals; application-level date checks prevent new duplicates.
 create index if not exists officeflow_notes_user_date_idx
   on public.officeflow_notes (user_id, note_date);
+

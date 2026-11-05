@@ -7,6 +7,20 @@ export type CompOffEntry = {
   earnedEntryId?: string;
 };
 
+export type CompOffHolidayLike = { date:string; status?:string };
+
+/** Only a second/fourth Saturday or an applicable configured holiday qualifies. Sundays and paid leave do not. */
+export function compOffQualifyingDayType(value:unknown, holidays:CompOffHolidayLike[]):string {
+  if(!isCompOffISODate(value))return "";
+  const [year,month,day]=value.split("-").map(Number);
+  const weekday=new Date(Date.UTC(year,month-1,day)).getUTCDay();
+  if(weekday===6&&Math.ceil(day/7)%2===0)return "2nd / 4th Saturday";
+  const holiday=holidays.find(item=>item.date===value);
+  if(!holiday)return "";
+  if(["central-reference","restricted-reference","provisional"].includes(holiday.status||""))return "Reference holiday — confirm office closure";
+  return "Public holiday";
+}
+
 export function isCompOffISODate(value: unknown): value is string {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const [year, month, day] = value.split("-").map(Number);
@@ -96,3 +110,4 @@ export function isValidCompOffUsageDate(value: unknown, usedEntryId: string, dat
   const earned = entries.find(entry => entry.id === usage.earnedEntryId && entry.type === "earned");
   return Boolean(earned && date >= earned.date && date <= (earned.expiresAt || compOffExpiryDate(earned.date)));
 }
+

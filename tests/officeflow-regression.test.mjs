@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   compOffExpiryDate,
+  compOffQualifyingDayType,
   normalizeCompOffEntries,
   getCompOffAvailableEntries,
   hasLinkedCompOffUsage,
@@ -27,6 +28,16 @@ import {
   mergePresetHolidays,
   inferHolidayPresetVersion,
 } from "../lib/officeflow-holidays.ts";
+
+test("comp-off eligibility is limited to 2nd/4th Saturdays and applicable holidays",()=>{
+  assert.equal(compOffQualifyingDayType("2026-11-14",[]),"2nd / 4th Saturday");
+  assert.equal(compOffQualifyingDayType("2026-11-28",[]),"2nd / 4th Saturday");
+  assert.equal(compOffQualifyingDayType("2026-11-07",[]),"");
+  assert.equal(compOffQualifyingDayType("2026-11-21",[]),"");
+  assert.equal(compOffQualifyingDayType("2026-11-01",[]),"");
+  assert.equal(compOffQualifyingDayType("2026-11-01",[{date:"2026-11-01",status:"karnataka-official"}]),"Public holiday");
+  assert.match(compOffQualifyingDayType("2026-11-07",[{date:"2026-11-07",status:"provisional"}]),/confirm office closure/);
+});
 import { suggestNoticeDocuments, buildNoticeChecklist, extractNoticeDueDate, classifyIncomeTaxNotice, combineNoticeChecklist } from "../lib/officeflow-notice.ts";
 import { getDiaryDateRange, indiaDateFromTimestamp, indiaLocalDateTimeToISO } from "../lib/officeflow-date.ts";
 import {
@@ -112,7 +123,7 @@ test("2026 Karnataka general and restricted references plus 2027 central and pro
   const holidays=presetHolidays2026_2027();
   const byDate=new Map(holidays.map(item=>[item.date,item]));
   assert.equal(holidays.length, new Set(holidays.map(item=>item.date)).size);
-  assert.equal(HOLIDAY_PRESET_VERSION,4);
+  assert.equal(HOLIDAY_PRESET_VERSION,5);
   assert.equal(holidays.filter(item=>item.status==="restricted-reference").length,21);
   assert.equal(byDate.get("2026-03-30")?.name.includes("Mahavir"),true);
   assert.equal(byDate.has("2026-03-31"),false);
@@ -129,7 +140,7 @@ test("2026 Karnataka general and restricted references plus 2027 central and pro
   assert.equal(byDate.get("2027-10-15")?.status,"provisional");
   assert.equal(byDate.get("2027-10-28")?.status,"provisional");
   assert.equal(byDate.get("2027-11-16")?.status,"provisional");
-  assert.equal(byDate.has("2027-10-30"),false);
+  assert.equal(byDate.get("2027-10-30")?.status,"provisional");
 });
 
 test("holiday v3 migration preserves user removals and removes obsolete provisional defaults", () => {
@@ -314,3 +325,4 @@ test("meeting conflicts include overlaps across midnight and allow exact end-to-
   assert.equal(meetingTimesOverlap({date:"2027-01-01",start:"23:30",duration:120},{date:"2027-01-02",start:"00:30",duration:30}),true);
   assert.equal(meetingTimesOverlap({date:"2027-01-01",start:"23:00",duration:60},{date:"2027-01-02",start:"00:00",duration:30}),false);
 });
+

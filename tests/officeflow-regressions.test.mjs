@@ -13,6 +13,7 @@ import {
 } from "../lib/officeflow-holidays.ts";
 import { isValidOfficeFlowBackup } from "../lib/officeflow-backup.ts";
 import { meetingOccurrenceDates, meetingTimesOverlap, hasMeetingConflict } from "../lib/officeflow-scheduling.ts";
+import { checklistTemplateForTaskType } from "../lib/checklist-templates.ts";
 
 test("comp-off expiry uses three calendar months with end-of-month clamping",()=>{
   assert.equal(compOffExpiryDate("2025-11-30"),"2026-02-28");
@@ -23,6 +24,15 @@ test("comp-off expiry uses three calendar months with end-of-month clamping",()=
 test("future earned days are not available before their earned date",()=>{
   const entries=[{id:"future",type:"earned",date:"2026-11-10",expiresAt:"2027-02-10"}];
   assert.deepEqual(getCompOffAvailableEntries(entries,"2026-11-03"),[]);
+});
+
+test("statutory checklist templates cover tax audit forms and GSTR-9 with verification steps",()=>{
+  const audit=checklistTemplateForTaskType("Form 3CA / 3CB and 3CD");
+  const annualGst=checklistTemplateForTaskType("GSTR-9 annual return");
+  assert.match(audit,/Form 3CD Preparation/);
+  assert.match(audit,/Form 3CB \/ 3CA Selection/);
+  assert.match(annualGst,/official GST guidance/);
+  assert.match(annualGst,/Input Tax Credit Reconciliation/);
 });
 
 test("legacy usage is linked FIFO and deleting one usage restores only its earned day",()=>{
@@ -153,3 +163,4 @@ test("2027 central and Karnataka holiday references remain distinct and provisio
   assert.equal(byDate("2027-10-29")?.status,"central-reference");
   assert.equal(byDate("2027-10-30")?.status,"provisional");
 });
+

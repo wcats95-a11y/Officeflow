@@ -14,11 +14,13 @@ const checklistTemplates: Record<string, string[]> = {
     "Filing, Verification & Acknowledgement — File the authorised return, complete e-verification, and save the ITR-V and filing records.",
   ],
   "tax audit": [
-    "Engagement & Audit Planning — Confirm applicability, scope, reporting clauses, timelines and client responsibilities; issue the records request.",
+    "Engagement & Audit Planning — Confirm current applicability, scope, reporting clauses, financial year and due dates from official sources; issue the records request.",
     "Books & Evidence Examination — Obtain trial balance, ledgers, financial statements and evidence; perform audit procedures and document exceptions.",
     "Tax Reconciliation & Clause Review — Reconcile book profit with taxable income; examine statutory dues, disallowances, related parties and reportable transactions.",
+    "Form 3CD Preparation — Complete applicable clauses using verified client records; document nil/not-applicable positions and supporting evidence.",
+    "Form 3CB / 3CA Selection & Report — Confirm the correct audit report form for the engagement and complete the report and annexures.",
     "Findings, Representation & Draft Report — Resolve queries with management, document representations and prepare the tax audit report and annexures.",
-    "Partner Review & Finalisation — Complete independent review, clear observations and obtain approval of the final report.",
+    "Independent Review & Finalisation — Complete independent review, clear observations, verify current portal requirements and obtain approval.",
     "Filing & Record Retention — Upload the report, coordinate client acceptance, verify filing status and preserve the signed audit file.",
   ],
   "tds returns": [
@@ -27,6 +29,22 @@ const checklistTemplates: Record<string, string[]> = {
     "Statement Preparation & Validation — Prepare the quarterly statement and validate PAN, section, rates, amounts and challan allocation.",
     "Review & Correction — Independently review the statement, resolve validation errors and obtain authorised approval.",
     "Filing & Acknowledgement — File the statement, save the token/acknowledgement and track processing or defaults.",
+  ],
+  "gstr-9": [
+    "Applicability & Period Check — Confirm whether GSTR-9 is applicable for the taxpayer and financial year using current official GST guidance; record the source and verification date.",
+    "Books, Returns & Data Collection — Obtain books, sales and purchase registers, GSTR-1, GSTR-3B, e-invoice and e-way bill data as applicable.",
+    "Turnover & Tax Reconciliation — Reconcile annual turnover, taxable/exempt supplies, tax liability, advances, credit/debit notes and amendments.",
+    "Input Tax Credit Reconciliation — Reconcile ITC claimed, reversed and available with books and portal statements; investigate material differences.",
+    "Annual Return Preparation & Review — Prepare the applicable annual return, document assumptions and exceptions, and obtain independent review.",
+    "Authorisation, Filing & Acknowledgement — Obtain client authorisation, file only after review, save the acknowledgement and communicate any follow-up.",
+  ],
+  "gstr 9": [
+    "Applicability & Period Check — Confirm whether GSTR-9 is applicable for the taxpayer and financial year using current official GST guidance; record the source and verification date.",
+    "Books, Returns & Data Collection — Obtain books, sales and purchase registers, GSTR-1, GSTR-3B, e-invoice and e-way bill data as applicable.",
+    "Turnover & Tax Reconciliation — Reconcile annual turnover, taxable/exempt supplies, tax liability, advances, credit/debit notes and amendments.",
+    "Input Tax Credit Reconciliation — Reconcile ITC claimed, reversed and available with books and portal statements; investigate material differences.",
+    "Annual Return Preparation & Review — Prepare the applicable annual return, document assumptions and exceptions, and obtain independent review.",
+    "Authorisation, Filing & Acknowledgement — Obtain client authorisation, file only after review, save the acknowledgement and communicate any follow-up.",
   ],
   "tds defaults and notices": [
     "Default Analysis & Deadline Control — Review the TRACES/intimation or notice, identify quarter, section, default type, demand and response date.",
@@ -119,14 +137,6 @@ const checklistTemplates: Record<string, string[]> = {
     "Review & Filing — Review the requested relief, obtain approval, file the petition and preserve acknowledgement.",
     "Hearing & Compliance Monitoring — Track the decision and recovery, comply with conditions and update the client.",
   ],
-  "penalty notice": [
-    "Notice, penalty provision and underlying order — Obtain the penalty notice, charge, underlying assessment/order and service evidence.",
-    "Facts, limitation and merits review — Verify jurisdiction, limitation, satisfaction/recorded reasons and the statutory basis for penalty.",
-    "Evidence and client information — Request and reconcile returns, books, prior submissions, explanations and supporting evidence.",
-    "Draft point-wise penalty response — Address each proposed charge, facts, legal grounds and applicable defences with indexed annexures.",
-    "Independent review and client approval — Review facts, law, calculations and evidence; resolve comments and obtain approval.",
-    "Filing and acknowledgement — Submit the reply, preserve acknowledgement and track hearing, order and further remedies.",
-  ],
   "tax opinion": [
     "Question, Scope & Assumptions — Define the question, relevant facts, years, scope, assumptions and documents required.",
     "Legal Research & Fact Verification — Verify records and research applicable provisions, rules, circulars and judicial authorities.",
@@ -158,6 +168,8 @@ export function checklistTemplateForTaskType(taskType: string): string {
   const key = normaliseTaskType(taskType);
   const template = checklistTemplates[key];
   if (template) return template.map((stage) => `[ ] ${stage}`).join("\n");
+  if (/\bgstr\s*[- ]?9\b/i.test(key)) return checklistTemplateForTaskType("GSTR-9");
+  if (/\b3c[abd]\b/i.test(key)) return checklistTemplateForTaskType("Tax Audit");
   if (/^notice\s+u\/s\s*142\s*\(\s*1\s*\)/i.test(key)) return checklistTemplateForTaskType("Notice u/s 142(1)");
   if (/^notice\s+u\/s\s*143\s*\(\s*2\s*\)/i.test(key)) return checklistTemplateForTaskType("Notice u/s 143(2)");
   if (/^notice\s+u\/s\s*148a/i.test(key)) return checklistTemplateForTaskType("Notice u/s 148A");
@@ -174,7 +186,6 @@ export function checklistTemplateForTaskType(taskType: string): string {
   if (/itr|return filing/i.test(key)) return checklistTemplateForTaskType("Income Tax Return Filing");
   if (/advisory/i.test(key)) return checklistTemplateForTaskType("Tax Advisory");
   if (/opinion/i.test(key)) return checklistTemplateForTaskType("Tax Opinion");
-  if (/penalty/i.test(key)) return checklistTemplateForTaskType("Penalty Notice");
   if (/other/i.test(key)) return checklistTemplateForTaskType("Other Direct Tax Assignments");
   return "";
 }
@@ -187,3 +198,4 @@ export function applyChecklistTemplate(template: string, current: string): strin
     return line.replace(/^\[ \]/, completed.has(stage) ? "[x]" : "[ ]");
   }).join("\n");
 }
+

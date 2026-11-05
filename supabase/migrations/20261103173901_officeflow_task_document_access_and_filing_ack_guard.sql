@@ -110,7 +110,7 @@ begin
     select value into v_submitted from jsonb_array_elements(coalesce(p_payload->'tasks','[]'::jsonb)) where value->>'id'=v_old_task->>'id' limit 1;
     v_found:=found;
     if v_found and (coalesce(v_old_task->>'createdByUserId','')=v_uid::text or exists(select 1 from jsonb_array_elements_text(coalesce(v_old_task->'juniors','[]'::jsonb)) assigned(name) where lower(trim(assigned.name))=lower(trim(v_display_name)))) then
-      v_safe:=v_submitted-array['billingStatus','billingOwner','billingAmount','amountPaid','paymentStatus','filingAckDocument','filingAck','lastFollowUpOutcome','juniors','preparer','reviewer','approvalStatus','createdByUserId','approvedBy','approvedAt','activity'];
+      v_safe:=v_submitted-array['billingStatus','billingOwner','billingAmount','amountPaid','paymentStatus','filingAckDocument','uploadedDocuments','documentLinks','filingAck','lastFollowUpOutcome','juniors','preparer','reviewer','approvalStatus','createdByUserId','approvedBy','approvedAt','activity'];
       select coalesce(array_agg(e.key order by e.key),'{}'::text[]) into v_changed from jsonb_each(v_safe) e where v_old_task->e.key is distinct from e.value;
       v_updated:=v_old_task||v_safe;
       if coalesce(v_old_task->>'status','To Do') not in ('Filed / completed','Done','Closed')
@@ -132,7 +132,7 @@ begin
   for v_submitted in select value from jsonb_array_elements(coalesce(p_payload->'tasks','[]'::jsonb))
   loop
     if not exists(select 1 from jsonb_array_elements(coalesce(v_existing->'tasks','[]'::jsonb)) x(value) where x.value->>'id'=v_submitted->>'id') then
-      v_safe:=v_submitted-array['billingStatus','billingOwner','billingAmount','amountPaid','paymentStatus','filingAckDocument','filingAck','lastFollowUpOutcome','juniors','preparer','reviewer','approvalStatus','createdByUserId','approvedBy','approvedAt','activity'];
+      v_safe:=v_submitted-array['billingStatus','billingOwner','billingAmount','amountPaid','paymentStatus','filingAckDocument','uploadedDocuments','documentLinks','filingAck','lastFollowUpOutcome','juniors','preparer','reviewer','approvalStatus','createdByUserId','approvedBy','approvedAt','activity'];
       v_task_id:=coalesce(nullif(v_submitted->>'id',''),gen_random_uuid()::text);
       v_new_task:=v_safe||jsonb_build_object('id',v_task_id,'createdByUserId',v_uid::text,'approvalStatus','pending','status','To Do','juniors',jsonb_build_array(v_display_name),'preparer',v_display_name,'activity',jsonb_build_array(jsonb_build_object('at',now(),'actor',v_display_name,'message','Task submitted as draft; awaiting manager approval')));
       v_tasks:=v_tasks||jsonb_build_array(v_new_task);
@@ -144,3 +144,4 @@ begin
   return jsonb_build_object('ok',true,'role',v_role);
 end;
 $function$;
+
