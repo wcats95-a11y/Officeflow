@@ -1488,3 +1488,16 @@ input,select,textarea{font-size:16px}
 .task-advanced-details>summary span{font-size:9px;font-weight:500;color:var(--muted)}
 .task-advanced-details[open]>label,.task-advanced-details[open]>.junior-picker-field{margin:0 12px 12px}
 .journal-canvas{touch-action:none}
+/* Keep grouped sidebar links legible against the dark workspace rail. */
+.app .sidebar .sidebar-nav-group{border-color:rgba(178,228,210,.16);background:rgba(255,255,255,.035)}
+.app .sidebar .sidebar-nav-group[open]{background:#0b493e;border-color:#26745f}
+.app .sidebar .sidebar-nav-group>summary{min-height:40px;color:#d8f1e6;font-size:12px}
+.app .sidebar .sidebar-nav-group>summary:hover{background:rgba(255,255,255,.055);color:#fff}
+.app .sidebar .sidebar-nav-group>div{padding:3px 6px 7px}
+.app .sidebar .sidebar-nav-group .nav-item{min-height:40px;padding:9px 11px;font-size:12px;font-weight:700;color:#d8eee5!important;background:transparent!important}
+.app .sidebar .sidebar-nav-group .nav-item .nav-icon{color:#9bd9c1!important}
+.app .sidebar .sidebar-nav-group .nav-item:hover{background:rgba(255,255,255,.09)!important;color:#fff!important}
+.app .sidebar .sidebar-nav-group .nav-item:hover .nav-icon{color:#c7f8e2!important}
+.app .sidebar .sidebar-nav-group .nav-item.active{background:#176653!important;color:#fff!important;box-shadow:inset 3px 0 #4adbb1}
+.app .sidebar .sidebar-nav-group .nav-item.active .nav-icon{color:#8df0c7!important}
+.app .sidebar .sidebar-nav-group>summary:focus-visible,.app .sidebar .sidebar-nav-group .nav-item:focus-visible{outline:2px solid #7be9c0;outline-offset:-2px}
