@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "../supabaseClient";
 import { buildJournalPdf } from "../lib/journal-pdf";
@@ -11,13 +11,42 @@ type JournalTool = "pen" | "eraser" | "select" | "rectangle" | "ellipse" | "line
 type JournalTodo = { id: string; line: number; checked: boolean };
 type JournalPage = { id: string; typed_text: string; handwriting_text: string; strokes: Stroke[]; todos: JournalTodo[] };
 type Journal = { id: string; note_date: string; title: string; pages: JournalPage[]; finalized_at?: string | null; updated_at?: string };
-const JOURNAL_LINE_STEP = 40;
-const JOURNAL_TODO_ROW_CENTER = 78;
+type TextSelection = { pageId: string; start: number; end: number };
+type MovingText = TextSelection & { text: string };
+const JOURNAL_LINE_STEP = 48;
+const JOURNAL_TODO_ROW_CENTER = 95;
 const storageKey = "officeflow-diary-notes-v1";
 const indiaDate = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 const makePage = (): JournalPage => ({ id: crypto.randomUUID(), typed_text: "", handwriting_text: "", strokes: [], todos: [] });
 const makeJournal = (date: string): Journal => ({ id: crypto.randomUUID(), note_date: date, title: "", pages: [makePage()] });
 const isLegacyEraser = (stroke: Stroke) => stroke.erase === true || stroke.color.toLowerCase() === "#fffefa" || stroke.color.toLowerCase() === "#ffffff";
+const pointInPolygon = (point: Point, polygon: Point[]) => {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [xi, yi] = polygon[i], [xj, yj] = polygon[j];
+    if ((yi > point[1]) !== (yj > point[1]) && point[0] < (xj - xi) * (point[1] - yi) / ((yj - yi) || Number.EPSILON) + xi) inside = !inside;
+  }
+  return inside;
+};
+const strokeOutline = (stroke: Stroke): Point[] => {
+  const raw = stroke.points;
+  if (stroke.shape === "rectangle" && raw.length > 1) { const [a,b]=raw;return [[a[0],a[1]],[b[0],a[1]],[b[0],b[1]],[a[0],b[1]],[a[0],a[1]]]; }
+  if (stroke.shape === "ellipse" && raw.length > 1) { const [a,b]=raw,cx=(a[0]+b[0])/2,cy=(a[1]+b[1])/2,rx=Math.abs(b[0]-a[0])/2,ry=Math.abs(b[1]-a[1])/2;return Array.from({length:49},(_,i)=>[cx+rx*Math.cos(i*Math.PI/24),cy+ry*Math.sin(i*Math.PI/24)] as Point); }
+  return raw;
+};
+const strokeHitDistance = (point: Point, stroke: Stroke, width: number, height: number) => {
+  const raw = strokeOutline(stroke);
+  if (!raw.length) return Infinity;
+  const px=point[0]*width,py=point[1]*height;
+  if(raw.length===1)return Math.hypot(px-raw[0][0]*width,py-raw[0][1]*height);
+  let min=Infinity;
+  for(let i=1;i<raw.length;i++){
+    const ax=raw[i-1][0]*width,ay=raw[i-1][1]*height,bx=raw[i][0]*width,by=raw[i][1]*height,dx=bx-ax,dy=by-ay;
+    const t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy||1)));
+    min=Math.min(min,Math.hypot(px-(ax+t*dx),py-(ay+t*dy)));
+  }
+  return min;
+};
 const normalizeJournal = (row: any): Journal => ({
   id: String(row.id || crypto.randomUUID()), note_date: String(row.note_date || indiaDate()), title: row.title || "", finalized_at: row.finalized_at || null,
   pages: Array.isArray(row.pages) && row.pages.length ? row.pages.map((page: any, index: number) => ({
@@ -38,6 +67,7 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
   const [dateFilter, setDateFilter] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tool, setTool] = useState<JournalTool>("pen");
+  const [stylusOnly, setStylusOnly] = useState(true);
   const [penColor, setPenColor] = useState("#243f68");
   const [penWidth, setPenWidth] = useState(3.2);
   const [lastInkPage, setLastInkPage] = useState("");
@@ -54,6 +84,8 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
   const [bookPageIndex, setBookPageIndex] = useState(0);
   const [pageFlip, setPageFlip] = useState<"next" | "previous" | "">("");
   const [selectedStrokeIds, setSelectedStrokeIds] = useState<string[]>([]);
+  const [typedSelection, setTypedSelection] = useState<TextSelection | null>(null);
+  const [movingText, setMovingText] = useState<MovingText | null>(null);
   const [pdfViewer, setPdfViewer] = useState<{ url: string; name: string } | null>(null);
   const canvasRefs = useRef(new Map<string, HTMLCanvasElement>());
   const canvasRefCallbacks = useRef(new Map<string, (element: HTMLCanvasElement | null) => void>());
@@ -61,7 +93,8 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
   const rootRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
-  const activeStroke = useRef<{ journalId: string; pageId: string; stroke: Stroke; mode: "draw" | "move"; startPoint?: Point; originals?: Stroke[]; previewStrokes?: Stroke[] } | null>(null);
+  useEffect(()=>{setSelectedStrokeIds([]);setTypedSelection(null);setMovingText(null);},[activeId]);
+  const activeStroke = useRef<{ journalId: string; pageId: string; stroke: Stroke; mode: "draw" | "move" | "lasso"; startPoint?: Point; originals?: Stroke[]; previewStrokes?: Stroke[] } | null>(null);
   const journalsRef = useRef(journals);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveVersionRef = useRef(0);
@@ -402,23 +435,21 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
     return [(event.clientX - rect.left) / rect.width, (event.clientY - rect.top) / rect.height, event.pointerType === "pen" && event.pressure > 0 ? event.pressure : 0.5];
   };
   const startStroke = (journalId: string, page: JournalPage, event: ReactPointerEvent<HTMLCanvasElement>) => {
+    if(activeIsLocked)return;
+    if (stylusOnly && event.pointerType !== "pen") return;
     event.preventDefault();
     try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* Some tablet browsers do not expose pointer capture. */ }
     const point = pointerPoint(event);
     if (tool === "select") {
       const rect = event.currentTarget.getBoundingClientRect();
-      const hit = [...page.strokes].reverse().find(stroke => {
-        if (!stroke.points.length) return false;
-        const xs = stroke.points.map(value => value[0]), ys = stroke.points.map(value => value[1]);
-        const padX = 24 / rect.width, padY = 24 / rect.height;
-        return point[0] >= Math.min(...xs) - padX && point[0] <= Math.max(...xs) + padX && point[1] >= Math.min(...ys) - padY && point[1] <= Math.max(...ys) + padY;
-      });
-      if (!hit?.id) { setSelectedStrokeIds([]); activeStroke.current = null; drawPage(page, event.currentTarget); return; }
-      const ids = event.shiftKey ? (selectedStrokeIds.includes(hit.id) ? selectedStrokeIds.filter(id => id !== hit.id) : [...selectedStrokeIds, hit.id]) : selectedStrokeIds.includes(hit.id) ? selectedStrokeIds : [hit.id];
-      const originals = page.strokes.filter(stroke => stroke.id && ids.includes(stroke.id));
-      setSelectedStrokeIds(ids);
-      activeStroke.current = { journalId, pageId: page.id, stroke: hit, mode: "move", startPoint: point, originals, previewStrokes: page.strokes };
-      drawPage(page, event.currentTarget);
+      const hit=page.strokes.map(stroke=>({stroke,distance:strokeHitDistance(point,stroke,rect.width,rect.height)})).filter(item=>item.distance<=Math.max(12,item.stroke.width)).sort((a,b)=>a.distance-b.distance)[0]?.stroke;
+      if(hit?.id&&selectedStrokeIds.includes(hit.id)){
+        const originals=page.strokes.filter(stroke=>stroke.id&&selectedStrokeIds.includes(stroke.id));
+        activeStroke.current={journalId,pageId:page.id,stroke:hit,mode:"move",startPoint:point,originals,previewStrokes:page.strokes};
+      } else {
+        setSelectedStrokeIds([]);
+        activeStroke.current={journalId,pageId:page.id,stroke:{id:crypto.randomUUID(),points:[point],color:"#16856a",width:1.6},mode:"lasso"};
+      }
       return;
     }
     const shape = tool === "rectangle" || tool === "ellipse" || tool === "line" ? tool : undefined;
@@ -449,6 +480,14 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
         current.previewStrokes = latest.strokes.map(saved => moved.get(saved.id) || saved);
         drawPage({ ...latest, strokes: current.previewStrokes }, event.currentTarget);
       }
+      return;
+    }
+    if (current.mode === "lasso") {
+      const coalesced=event.nativeEvent.getCoalescedEvents?.();
+      const samples=coalesced?.length?coalesced:[event.nativeEvent];
+      for(const sample of samples)current.stroke.points.push([(sample.clientX-rect.left)/rect.width,(sample.clientY-rect.top)/rect.height,0.5]);
+      const latest=journalsRef.current.find(journal=>journal.id===current.journalId)?.pages.find(page=>page.id===current.pageId);
+      if(latest)drawPage(latest,event.currentTarget,current.stroke);
       return;
     }
     const coalesced = event.nativeEvent.getCoalescedEvents?.();
@@ -496,6 +535,22 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
       renderedStrokeSets.current.set(finished.pageId, nextStrokes);
       drawPage({ ...currentPage, strokes: nextStrokes }, canvasRefs.current.get(finished.pageId)!);
       setJournals(old => old.map(journal => journal.id === finished.journalId ? { ...journal, pages: journal.pages.map(page => page.id === finished.pageId ? { ...page, strokes: nextStrokes } : page), updated_at: new Date().toISOString() } : journal));
+      return;
+    }
+    if(finished.mode==="lasso"){
+      if(!currentPage)return;
+      const canvas=canvasRefs.current.get(finished.pageId),rect=canvas?.getBoundingClientRect();
+      if(!canvas||!rect)return;
+      const path=finished.stroke.points;
+      const length=path.slice(1).reduce((sum,p,index)=>sum+Math.hypot((p[0]-path[index][0])*rect.width,(p[1]-path[index][1])*rect.height),0);
+      let selected:string[]=[];
+      if(length<14){
+        const point=path[0];
+        selected=currentPage.strokes.map((stroke,index)=>({stroke,index,distance:strokeHitDistance(point,stroke,rect.width,rect.height)})).filter(item=>item.distance<=Math.max(14,item.stroke.width)).sort((a,b)=>a.distance-b.distance||b.index-a.index).slice(0,1).flatMap(item=>item.stroke.id?[item.stroke.id]:[]);
+      } else if(path.length>=3){
+        selected=currentPage.strokes.filter(stroke=>stroke.id&&strokeOutline(stroke).some(point=>pointInPolygon(point,path))).flatMap(stroke=>stroke.id?[stroke.id]:[]);
+      }
+      setSelectedStrokeIds(selected);drawPage(currentPage,canvas);
       return;
     }
     setLastInkPage(finished.pageId);
@@ -547,6 +602,36 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
     const page = journal?.pages.find(entry => entry.id === pageId);
     if (!journal || !page) return;
     updatePage(journalId, pageId, { todos: page.todos.map(todo => todo.id === todoId ? { ...todo, checked: !todo.checked } : todo) });
+  };
+  const rememberTypedSelection=(pageId:string,area:HTMLTextAreaElement)=>{
+    if(area.selectionEnd>area.selectionStart)setTypedSelection({pageId,start:area.selectionStart,end:area.selectionEnd});
+    else setTypedSelection(null);
+  };
+  const copyTypedSelection=async(cut=false)=>{
+    if(!active||!typedSelection)return;
+    const page=active.pages.find(item=>item.id===typedSelection.pageId),text=page?.typed_text.slice(typedSelection.start,typedSelection.end)||"";
+    if(!page||!text)return;
+    try{await navigator.clipboard.writeText(text);}catch{setUiMessage("Clipboard access is unavailable. Allow clipboard access and try again.");return;}
+    if(cut){updatePage(active.id,page.id,{typed_text:page.typed_text.slice(0,typedSelection.start)+page.typed_text.slice(typedSelection.end)});setTypedSelection(null);}
+    setUiMessage(cut?"Selected text cut to clipboard.":"Selected text copied.");
+  };
+  const insertMovedText=(pageId:string,area:HTMLTextAreaElement)=>{
+    if(!active||!movingText)return;
+    const journal=journalsRef.current.find(item=>item.id===active.id),source=journal?.pages.find(page=>page.id===movingText.pageId),destination=journal?.pages.find(page=>page.id===pageId);
+    if(!source||!destination)return;
+    let insertAt=area.selectionStart;
+    if(source.id===destination.id&&insertAt>=movingText.start&&insertAt<=movingText.end){setUiMessage("Choose a destination outside the selected text.");return;}
+    let nextPages=journal!.pages.map(page=>({...page}));
+    if(source.id===destination.id){
+      const without=source.typed_text.slice(0,movingText.start)+source.typed_text.slice(movingText.end);
+      if(insertAt>movingText.end)insertAt-=movingText.end-movingText.start;
+      const nextText=without.slice(0,insertAt)+movingText.text+without.slice(insertAt);
+      nextPages=nextPages.map(page=>page.id===source.id?{...page,typed_text:nextText}:page);
+    }else{
+      nextPages=nextPages.map(page=>page.id===source.id?{...page,typed_text:page.typed_text.slice(0,movingText.start)+page.typed_text.slice(movingText.end)}:page.id===destination.id?{...page,typed_text:page.typed_text.slice(0,insertAt)+movingText.text+page.typed_text.slice(insertAt)}:page);
+    }
+    const next=journalsRef.current.map(item=>item.id===active.id?{...item,pages:nextPages,updated_at:new Date().toISOString()}:item);
+    journalsRef.current=next;setJournals(next);setMovingText(null);setTypedSelection(null);setUiMessage("Selected text moved. Tap the destination line to place the cursor again.");
   };
 
   const toggleFullscreen = async () => {
@@ -638,27 +723,27 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
           </div>
           {activeIsLocked && <div className="journal-locked-banner" role="status">This day is closed and read-only. The PDF is available in the app.</div>}
           <div className="journal-toolbar" role="toolbar" aria-label="Journal writing tools">
-            <button disabled={activeIsLocked} className={tool === "pen" ? "chosen" : ""} onClick={() => setTool("pen")} aria-pressed={tool === "pen"}>✎ <span>Pen</span></button>
+            <button disabled={activeIsLocked} className={tool === "pen" ? "chosen" : ""} onClick={() => setTool("pen")} aria-pressed={tool === "pen"}>✎ <span>Pen</span></button><button type="button" className={stylusOnly?"chosen":""} title={stylusOnly?"Ignore finger touches on the page":"Allow finger drawing"} aria-pressed={stylusOnly} onClick={()=>setStylusOnly(value=>!value)}>✒ <span>{stylusOnly?"Stylus only":"Finger draw"}</span></button>
             {tool !== "select" && tool !== "eraser" && <div className="journal-colors" aria-label="Pen colour">{["#243f68", "#222b29", "#356b54", "#934d48"].map(color => <button key={color} className={penColor === color ? "selected" : ""} style={{ backgroundColor: color }} aria-label={`Choose ${color} ink`} aria-pressed={penColor === color} onClick={() => setPenColor(color)}/>)}</div>}
             {tool !== "select" && tool !== "eraser" && <>
               <select className="journal-pen-width" aria-label="Pen size" value={penWidth} onChange={event => setPenWidth(Number(event.target.value))}><option value={2.4}>Fine</option><option value={3.2}>Regular</option><option value={4.2}>Bold</option></select></>}
             <button disabled={activeIsLocked} className={tool === "eraser" ? "chosen" : ""} onClick={() => setTool("eraser")} aria-pressed={tool === "eraser"}>⌫ <span>Eraser</span></button>
-            <button disabled={activeIsLocked} title="Select and move handwriting; hold Shift to select multiple strokes" className={tool === "select" ? "chosen" : ""} onClick={() => setTool("select")} aria-pressed={tool === "select"}>⌖ <span>Select</span></button>
+            <button disabled={activeIsLocked} title="Freehand lasso to select handwriting; draw around ink, then drag the selection to move it" className={tool === "select" ? "chosen" : ""} onClick={() => setTool("select")} aria-pressed={tool === "select"}>⌖ <span>Free select</span></button>
             <button disabled={activeIsLocked} title="Draw a rectangle" className={tool === "rectangle" ? "chosen" : ""} onClick={() => setTool("rectangle")} aria-pressed={tool === "rectangle"}>▱ <span>Box</span></button>
             <button disabled={activeIsLocked} title="Draw an ellipse" className={tool === "ellipse" ? "chosen" : ""} onClick={() => setTool("ellipse")} aria-pressed={tool === "ellipse"}>◯ <span>Oval</span></button>
             <button disabled={activeIsLocked} title="Draw a straight line" className={tool === "line" ? "chosen" : ""} onClick={() => setTool("line")} aria-pressed={tool === "line"}>／ <span>Line</span></button>
             <button onClick={() => { const page = active.pages.find(entry => entry.id === lastInkPage) || active.pages.at(-1); if (page?.strokes.length) updatePage(active.id, page.id, { strokes: page.strokes.slice(0, -1) }); }} disabled={!active.pages.some(page => page.strokes.length)}>↶ <span>Undo ink</span></button>
             <button disabled={activeIsLocked} className="journal-todo-add" onClick={addTodoLine}>☐ <span>To-do line</span></button>
-            <span className="journal-tool-spacer"/><span className="journal-page-count">{active.pages.length} {active.pages.length === 1 ? "page" : "pages"}</span>
+            <span className="journal-tool-spacer"/>{typedSelection&&active&&!activeIsLocked&&<div className="journal-text-actions"><button type="button" onClick={()=>void copyTypedSelection()}>Copy text</button><button type="button" onClick={()=>void copyTypedSelection(true)}>Cut text</button><button type="button" className={movingText?"chosen":""} onClick={()=>{if(movingText)setMovingText(null);else{const page=active.pages.find(item=>item.id===typedSelection.pageId);if(page)setMovingText({...typedSelection,text:page.typed_text.slice(typedSelection.start,typedSelection.end)});}}}>{movingText?"Cancel move":"Move text"}</button></div>}<span className="journal-page-count">{active.pages.length} {active.pages.length === 1 ? "page" : "pages"}</span>
           </div>
-          <div className="journal-ink-hint" aria-live="polite">{tool === "select" ? "Tap ink or a shape to select it. Drag to move; hold Shift to add more strokes to the selection." : tool === "rectangle" || tool === "ellipse" || tool === "line" ? "Drag on the page to draw the selected shape." : "Write with your stylus. Add a to-do line to place a checkbox, then write beside it. Search finds titles and typed text."}</div>
+          <div className="journal-ink-hint" aria-live="polite">{movingText ? "Tap a destination in any page text area to move the selection." : typedSelection ? "Typed text selected. Copy, cut, or choose Move text then tap a destination." : tool === "select" ? "Draw a freehand loop around handwriting to select it, then drag the selection to move it. Tap a stroke to select it precisely." : tool === "rectangle" || tool === "ellipse" || tool === "line" ? "Drag on the page to draw the selected shape." : "Write with your stylus. Add a to-do line to place a checkbox, then write beside it. Search finds titles and typed text."}</div>
           <div className={`journal-pages${isFullscreen ? " journal-book-stage" : ""}`}>{visiblePages.map(page => { const index = active.pages.findIndex(item => item.id === page.id); const isTurningPage = isFullscreen && page.id === active.pages[bookPageIndex]?.id; return <section className={`journal-page${isFullscreen ? " journal-book-page" : ""}${isFullscreen && !isTurningPage ? " journal-book-under-page" : ""}${isTurningPage && pageFlip ? ` flip-${pageFlip}` : ""}`} id={`journal-page-${page.id}`} key={page.id}>
             <div className="journal-page-label"><span>PAGE {String(index + 1).padStart(2, "0")}</span><span>{page.todos.length ? `${page.todos.filter(todo => todo.checked).length}/${page.todos.length} done` : ""}</span></div>
             <div className="journal-canvas-wrap">
             <canvas ref={canvasRefFor(page.id)} className={`journal-canvas journal-canvas-${tool}`} onPointerDown={event => startStroke(active.id, page, event)} onPointerMove={moveStroke} onPointerUp={finishStroke} onPointerCancel={finishStroke}/>
-              {page.todos.map(todo => <button key={todo.id} id={`journal-todo-${todo.id}`} type="button" className={`journal-todo-checkbox${todo.checked ? " checked" : ""}`} style={{ top: `calc(${JOURNAL_TODO_ROW_CENTER}px + ${todo.line * JOURNAL_LINE_STEP}px)` }} onClick={() => toggleTodo(active.id, page.id, todo.id)} aria-label={`${todo.checked ? "Uncheck" : "Check off"} to-do line ${todo.line + 1}`} aria-pressed={todo.checked}>{todo.checked ? "✓" : ""}</button>)}
+              {page.todos.map(todo => <Fragment key={todo.id}>{todo.checked&&<span aria-hidden="true" className="journal-todo-scratch" style={{top:`calc(${JOURNAL_TODO_ROW_CENTER}px + ${todo.line*JOURNAL_LINE_STEP}px)`}}/>}<button key={todo.id} id={`journal-todo-${todo.id}`} type="button" disabled={activeIsLocked} className={`journal-todo-checkbox${todo.checked ? " checked" : ""}`} style={{ top: `calc(${JOURNAL_TODO_ROW_CENTER}px + ${todo.line * JOURNAL_LINE_STEP}px)` }} onClick={() => toggleTodo(active.id, page.id, todo.id)} aria-label={`${todo.checked ? "Uncheck" : "Check off"} to-do line ${todo.line + 1}`} aria-pressed={todo.checked}>{todo.checked ? "✓" : ""}</button></Fragment>)}
             </div>
-            <textarea className="journal-page-typing" value={page.typed_text} disabled={activeIsLocked} onChange={event => updatePage(active.id, page.id, { typed_text: event.target.value })} placeholder="Type notes on this page…" aria-label={`Typed notes for page ${index + 1}`}/>
+            <textarea className="journal-page-typing" value={page.typed_text} disabled={activeIsLocked} onChange={event => updatePage(active.id, page.id, { typed_text: event.target.value })} placeholder="Type notes on this page…" aria-label={`Typed notes for page ${index + 1}`} onSelect={event=>rememberTypedSelection(page.id,event.currentTarget)} onMouseUp={event=>rememberTypedSelection(page.id,event.currentTarget)} onKeyUp={event=>rememberTypedSelection(page.id,event.currentTarget)} onClick={event=>movingText?insertMovedText(page.id,event.currentTarget):rememberTypedSelection(page.id,event.currentTarget)}/>
             {page.handwriting_text && <details className="journal-recognized"><summary>Previously recognized text · editable</summary><textarea value={page.handwriting_text} onChange={event => updatePage(active.id, page.id, { handwriting_text: event.target.value })} aria-label={`Previously recognized text for page ${index + 1}`}/></details>}
           </section>; })}{!isFullscreen && <button className="journal-add-page" onClick={addPage}>＋ Add another page</button>}</div>
           {isFullscreen && <nav className="journal-book-controls" aria-label="Journal page controls"><button onClick={() => turnPage("previous")} disabled={bookPageIndex <= 0 || Boolean(pageFlip)}>‹ Previous</button><span>Page {bookPageIndex + 1} of {active.pages.length}</span><button disabled={Boolean(pageFlip) || activeIsLocked} onClick={() => bookPageIndex === active.pages.length - 1 ? addBookPage() : turnPage("next")}>{bookPageIndex === active.pages.length - 1 ? "＋ New page" : "Next ›"}</button></nav>}

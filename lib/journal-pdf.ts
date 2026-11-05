@@ -12,8 +12,8 @@ const rgb = (hex: string) => {
 
 function inkPage(entry: JournalPdfEntry, page: JournalPdfPage, index: number): string {
   const commands = ["q", "1 1 1 rg", "0 0 595 842 re f", "Q", "BT", "/F1 16 Tf", "48 800 Td", `(${pdfText(entry.title || "Daily journal")}) Tj`, "0 -22 Td", "/F1 10 Tf", `(${pdfText(entry.note_date)}    Page ${index + 1} of ${entry.pages.length}) Tj`, "ET"];
-  const x0 = 48, yTop = 755, lineStep = 27, width = 500, height = 680;
-  for (let y = yTop; y > 44; y -= lineStep) commands.push("0.88 0.92 0.95 RG 0.55 w", `${x0} ${number(y)} m ${x0 + width} ${number(y)} l S`);
+  const x0 = 48, yTop = 755, lineStep = 35.5, width = 500, height = 680;
+  for (let y = yTop; y > 44; y -= lineStep) commands.push("0.78 0.84 0.89 RG 0.65 w", `${x0} ${number(y)} m ${x0 + width} ${number(y)} l S`);
   commands.push("0.94 0.78 0.76 RG 0.7 w", `87 58 m 87 759 l S`);
   for (const stroke of page.strokes || []) {
     if (!stroke.points?.length) continue;
@@ -40,19 +40,19 @@ function inkPage(entry: JournalPdfEntry, page: JournalPdfPage, index: number): s
     }
   }
   // Redraw the notebook ruling after white erase strokes so the lines remain visible.
-  for (let y = yTop; y > 44; y -= lineStep) commands.push("0.88 0.92 0.95 RG 0.55 w", `${x0} ${number(y)} m ${x0 + width} ${number(y)} l S`);
+  for (let y = yTop; y > 44; y -= lineStep) commands.push("0.78 0.84 0.89 RG 0.65 w", `${x0} ${number(y)} m ${x0 + width} ${number(y)} l S`);
   commands.push("0.94 0.78 0.76 RG 0.7 w", `87 58 m 87 759 l S`);
   for (const todo of page.todos || []) {
-    const y = yTop - (58 + todo.line * 40) * (height / 920) - 5;
+    const y = yTop - ((95 - 23 + todo.line * 48) * (height / 920)) - 5;
     if (y < 45 || y > 760) continue;
     commands.push("0.1 0.35 0.28 RG 1 w", `55 ${number(y)} 10 10 re S`);
-    if (todo.checked) commands.push(`57 ${number(y + 4)} m 59 ${number(y + 1)} l 64 ${number(y + 8)} l S`);
+    if (todo.checked) commands.push("0.12 0.55 0.35 RG 1.8 w", `92 ${number(y + 5)} m 548 ${number(y + 5)} l S`, "0.1 0.35 0.28 RG 1 w", `57 ${number(y + 4)} m 59 ${number(y + 1)} l 64 ${number(y + 8)} l S`);
   }
   return commands.join("\n");
 }
 
-function typedPages(entry: JournalPdfEntry): string[] {
-  const text = entry.pages.map(page => page.typed_text?.trim()).filter(Boolean).join("\n\n");
+function typedPages(entry: JournalPdfEntry, page: JournalPdfPage, pageIndex: number): string[] {
+  const text = page.typed_text?.trim() || "";
   if (!text) return [];
   const lines: string[] = [];
   for (const paragraph of text.split(/\r?\n/)) {
@@ -66,7 +66,7 @@ function typedPages(entry: JournalPdfEntry): string[] {
   const pages: string[] = [];
   while (lines.length) {
     const chunk = lines.splice(0, 48);
-    const commands = ["BT", "/F1 16 Tf", "48 790 Td", `(${pdfText(entry.title || "Daily journal")}) Tj`, "0 -22 Td", "/F1 10 Tf", `(${pdfText(entry.note_date)}    Typed notes) Tj`, "0 -28 Td", "/F1 11 Tf", "14 TL"];
+    const commands = ["BT", "/F1 16 Tf", "48 790 Td", `(${pdfText(entry.title || "Daily journal")}) Tj`, "0 -22 Td", "/F1 10 Tf", `(${pdfText(entry.note_date)}    Typed notes for page ${pageIndex + 1}) Tj`, "0 -28 Td", "/F1 11 Tf", "14 TL"];
     chunk.forEach((line, index) => commands.push(`${index ? "T* " : ""}(${pdfText(line)}) Tj`));
     commands.push("ET"); pages.push(commands.join("\n"));
   }
@@ -74,7 +74,7 @@ function typedPages(entry: JournalPdfEntry): string[] {
 }
 
 export function buildJournalPdf(entry: JournalPdfEntry): Uint8Array {
-  const contents = [...entry.pages.map((page, index) => inkPage(entry, page, index)), ...typedPages(entry)];
+  const contents = entry.pages.flatMap((page, index) => [inkPage(entry, page, index), ...typedPages(entry, page, index)]);
   const objects: string[] = ["", "", "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"];
   const pageIds: number[] = [];
   contents.forEach(content => {
