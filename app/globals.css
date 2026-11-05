@@ -1422,6 +1422,41 @@ input,select,textarea{font-size:16px}
 .journal-pdf-viewer iframe{flex:1;width:100%;min-height:0;border:0;background:#e8ece9}
 @media(max-width:760px){.journal-end-day{grid-column:1/-1;width:100%;min-height:42px}.journal-book-stage{padding:8px 7px 3px}.journal-book-page{width:100%;max-height:100%}.journal-fullscreen.is-fullscreen .journal-canvas{height:min(61vh,720px)}.journal-book-controls{width:calc(100% - 14px);margin:3px auto 6px;padding:6px}.journal-book-controls button{padding:8px 10px;font-size:11px}.journal-book-controls span{font-size:10px}.journal-pdf-backdrop{padding:0}.journal-pdf-viewer{height:100dvh;border-radius:0}.journal-pdf-viewer header{padding:7px 8px}.journal-pdf-viewer header b{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}.journal-pdf-viewer a,.journal-pdf-viewer header button{padding:8px;font-size:10px}}
 @media(prefers-reduced-motion:reduce){.journal-book-page.flip-next,.journal-book-page.flip-previous{animation-duration:.01ms}}
+
+/* A true writing-only journal view: paper uses the whole viewport, without workspace or journal navigation. */
+.journal-fullscreen.is-fullscreen{background:#fffefa;color:#24382f;overflow:hidden}
+.journal-fullscreen.is-fullscreen>.journal-topbar,.journal-fullscreen.is-fullscreen>.journal-frame>.journal-sidebar,.journal-fullscreen.is-fullscreen .journal-sidebar-backdrop{display:none!important}
+.journal-fullscreen.is-fullscreen .journal-frame{position:absolute;inset:0;width:100%;height:100dvh;min-height:0;overflow:hidden}
+.journal-fullscreen.is-fullscreen .journal-writing{position:relative;width:100%;height:100%;min-height:0;overflow:hidden;align-items:stretch;background:#fffefa}
+.journal-fullscreen.is-fullscreen .journal-entry-heading,.journal-fullscreen.is-fullscreen .journal-ink-hint,.journal-fullscreen.is-fullscreen .journal-footer-hint,.journal-fullscreen.is-fullscreen .journal-locked-banner{display:none!important}
+.journal-fullscreen.is-fullscreen .journal-pages.journal-book-stage{position:absolute;inset:0;width:100%;height:100%;min-height:0;display:grid;place-items:stretch;gap:0;padding:0;overflow:hidden}
+.journal-fullscreen.is-fullscreen .journal-book-stage>.journal-page{grid-area:1/1;width:100%;height:100%;max-height:none;min-height:0;display:flex;flex-direction:column;align-self:stretch;border:0;border-radius:0;box-shadow:none;scroll-margin:0}
+.journal-fullscreen.is-fullscreen .journal-page-label{display:none}
+.journal-fullscreen.is-fullscreen .journal-canvas-wrap{flex:1;min-height:0}
+.journal-fullscreen.is-fullscreen .journal-canvas{width:100%;height:100%;min-height:0;max-height:none;touch-action:pan-y}
+.journal-fullscreen.is-fullscreen .journal-page-typing{flex:none;width:calc(100% - 70px);height:clamp(64px,12dvh,140px);min-height:64px;resize:none;margin:0 16px 0 54px;padding:9px 8px;background:#fffefa}
+.journal-fullscreen.is-fullscreen .journal-toolbar{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;z-index:12;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 150px);min-height:44px;margin:0;padding:5px 7px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;background:#ffffffed;backdrop-filter:blur(12px);box-shadow:0 6px 24px #183c2c25}
+.journal-fullscreen.is-fullscreen .journal-toolbar button{padding:7px 9px;font-size:11px}
+.journal-fullscreen.is-fullscreen .journal-toolbar .journal-tool-spacer,.journal-fullscreen.is-fullscreen .journal-page-count{display:none}
+.journal-fullscreen.is-fullscreen .journal-book-controls{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));z-index:12;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 24px);margin:0;padding:6px 9px;border-color:#d6e2dc;background:#ffffffed;backdrop-filter:blur(12px);box-shadow:0 6px 24px #183c2c25}
+.journal-fullscreen.is-fullscreen .journal-book-controls button{padding:8px 12px}
+.journal-fullscreen.is-fullscreen .journal-book-add{display:none}
+.journal-focus-save{position:fixed;top:calc(18px + env(safe-area-inset-top));left:16px;z-index:13;border-radius:999px;padding:5px 9px;background:#ffffffd9;color:#638074;font-size:10px;pointer-events:none}
+.journal-focus-exit{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:14;min-height:40px;border:1px solid #cdded4;border-radius:9px;padding:8px 11px;background:#ffffffed;color:#285d49;font-size:11px;font-weight:800;box-shadow:0 4px 16px #183c2c1c}
+.journal-focus-exit span{margin-left:3px}
+@media(max-width:760px){
+ .journal-fullscreen.is-fullscreen .journal-writing{width:100%;height:100dvh}
+ .journal-fullscreen.is-fullscreen .journal-toolbar{top:calc(7px + env(safe-area-inset-top));left:8px;right:88px;transform:none;width:auto;max-width:none;min-height:42px;gap:2px}
+ .journal-fullscreen.is-fullscreen .journal-toolbar button{min-height:34px;padding:6px 7px;font-size:10px}
+ .journal-fullscreen.is-fullscreen .journal-toolbar .journal-colors button{width:16px;height:16px;min-width:16px;min-height:16px;padding:0}
+ .journal-focus-save{top:auto;bottom:calc(62px + env(safe-area-inset-bottom));left:10px;font-size:9px}
+ .journal-focus-exit{top:calc(7px + env(safe-area-inset-top));right:8px;min-height:40px;padding:7px 8px;font-size:10px}
+ .journal-fullscreen.is-fullscreen .journal-book-controls{bottom:calc(8px + env(safe-area-inset-bottom));gap:6px;padding:5px 7px}
+ .journal-fullscreen.is-fullscreen .journal-book-controls button{min-height:36px;padding:7px 9px;font-size:10px}
+ .journal-fullscreen.is-fullscreen .journal-book-controls span{font-size:9px}
+ .journal-fullscreen.is-fullscreen .journal-page-typing{width:calc(100% - 50px);height:clamp(60px,12dvh,110px);min-height:60px;margin-left:42px;font-size:14px}
+}
+@media(max-width:390px){.journal-fullscreen.is-fullscreen .journal-toolbar{left:5px;right:78px}.journal-fullscreen.is-fullscreen .journal-toolbar button{padding:6px 5px}.journal-focus-exit{right:5px;padding:6px}.journal-fullscreen.is-fullscreen .journal-book-controls{gap:3px}.journal-fullscreen.is-fullscreen .journal-book-controls button{padding:6px}}
 /* Compact, collapsible workspace navigation and task-form controls. */
 .desktop-nav{display:flex;flex-direction:column;gap:7px;min-height:0;overflow:auto}
 .sidebar-nav-group{border:1px solid transparent;border-radius:10px;overflow:hidden}
@@ -1452,3 +1487,4 @@ input,select,textarea{font-size:16px}
 .task-advanced-details>summary::-webkit-details-marker{display:none}
 .task-advanced-details>summary span{font-size:9px;font-weight:500;color:var(--muted)}
 .task-advanced-details[open]>label,.task-advanced-details[open]>.junior-picker-field{margin:0 12px 12px}
+.journal-canvas{touch-action:none}

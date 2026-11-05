@@ -10,6 +10,8 @@ type Stroke = { points: Point[]; color: string; width: number; erase?: boolean }
 type JournalTodo = { id: string; line: number; checked: boolean };
 type JournalPage = { id: string; typed_text: string; handwriting_text: string; strokes: Stroke[]; todos: JournalTodo[] };
 type Journal = { id: string; note_date: string; title: string; pages: JournalPage[]; finalized_at?: string | null; updated_at?: string };
+const JOURNAL_LINE_STEP = 40;
+const JOURNAL_TODO_ROW_CENTER = 78;
 const storageKey = "officeflow-diary-notes-v1";
 const indiaDate = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 const makePage = (): JournalPage => ({ id: crypto.randomUUID(), typed_text: "", handwriting_text: "", strokes: [], todos: [] });
@@ -52,6 +54,8 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
   const [pageFlip, setPageFlip] = useState<"next" | "previous" | "">("");
   const [pdfViewer, setPdfViewer] = useState<{ url: string; name: string } | null>(null);
   const canvasRefs = useRef(new Map<string, HTMLCanvasElement>());
+  const canvasRefCallbacks = useRef(new Map<string, (element: HTMLCanvasElement | null) => void>());
+  const renderedStrokeSets = useRef(new Map<string, Stroke[]>());
   const rootRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -60,6 +64,23 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveVersionRef = useRef(0);
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const canvasRefFor = (pageId: string) => {
+    let callback = canvasRefCallbacks.current.get(pageId);
+    if (!callback) {
+      callback = element => {
+        if (element) {
+          element.dataset.journalPageId = pageId;
+          canvasRefs.current.set(pageId, element);
+        }
+        else {
+          canvasRefs.current.delete(pageId);
+          renderedStrokeSets.current.delete(pageId);
+        }
+      };
+      canvasRefCallbacks.current.set(pageId, callback);
+    }
+    return callback;
+  };
 
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => { journalsRef.current = journals; }, [journals]);
@@ -102,6 +123,7 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
   }, [userId, accountStorageKey, retryLoad]);
 
   const active = journals.find(journal => journal.id === activeId) || journals.find(journal => journal.note_date === selectedDate) || null;
+  const activePageKey = active?.pages.map(page => page.id).join("|") || "";
   const activeIsLocked = Boolean(active && (active.finalized_at || active.note_date < today));
   const filtered = useMemo(() => journals.filter(journal => {
     const matchesDate = !dateFilter || journal.note_date === dateFilter;
@@ -237,7 +259,7 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
   const drawPage = useCallback((page: JournalPage, canvas: HTMLCanvasElement) => {
     const rect = canvas.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     if (canvas.width !== Math.round(rect.width * dpr) || canvas.height !== Math.round(rect.height * dpr)) {
       canvas.width = Math.round(rect.width * dpr);
       canvas.height = Math.round(rect.height * dpr);
@@ -259,15 +281,18 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
         ctx.fill();
         continue;
       }
-      for (let index = 1; index < stroke.points.length; index++) {
-        const previous = stroke.points[index - 1], next = stroke.points[index];
-        ctx.beginPath();
-        ctx.strokeStyle = stroke.color;
-        ctx.lineWidth = Math.max(0.8, stroke.width * (0.5 + (((previous[2] || 0.5) + (next[2] || 0.5)) / 2) * 1.15));
-        ctx.moveTo(previous[0] * rect.width, previous[1] * rect.height);
-        ctx.lineTo(next[0] * rect.width, next[1] * rect.height);
-        ctx.stroke();
+      ctx.beginPath();
+      ctx.strokeStyle = stroke.color;
+      const averagePressure = stroke.points.reduce((sum, point) => sum + (point[2] ?? 0.5), 0) / stroke.points.length;
+      ctx.lineWidth = Math.max(0.8, stroke.width * (0.5 + averagePressure * 1.15));
+      ctx.moveTo(stroke.points[0][0] * rect.width, stroke.points[0][1] * rect.height);
+      for (let index = 1; index < stroke.points.length - 1; index++) {
+        const point = stroke.points[index], next = stroke.points[index + 1];
+        ctx.quadraticCurveTo(point[0] * rect.width, point[1] * rect.height, ((point[0] + next[0]) / 2) * rect.width, ((point[1] + next[1]) / 2) * rect.height);
       }
+      const last = stroke.points.at(-1)!;
+      ctx.lineTo(last[0] * rect.width, last[1] * rect.height);
+      ctx.stroke();
     }
     ctx.globalCompositeOperation = "source-over";
   }, []);
@@ -276,12 +301,26 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
     if (!active) return;
     for (const page of active.pages) {
       const canvas = canvasRefs.current.get(page.id);
-      if (canvas) drawPage(page, canvas);
+      if (canvas && renderedStrokeSets.current.get(page.id) !== page.strokes) {
+        drawPage(page, canvas);
+        renderedStrokeSets.current.set(page.id, page.strokes);
+      }
     }
-    const resize = new ResizeObserver(() => {
-      for (const page of active.pages) {
-        const canvas = canvasRefs.current.get(page.id);
-        if (canvas) drawPage(page, canvas);
+  }, [active, drawPage]);
+
+  useEffect(() => {
+    if (!active || !activePageKey) return;
+    const journalId = active.id;
+    const resize = new ResizeObserver(entries => {
+      const journal = journalsRef.current.find(entry => entry.id === journalId);
+      if (!journal) return;
+      for (const entry of entries) {
+        const canvas = entry.target as HTMLCanvasElement;
+        const page = journal.pages.find(item => item.id === canvas.dataset.journalPageId);
+        if (page) {
+          drawPage(page, canvas);
+          renderedStrokeSets.current.set(page.id, page.strokes);
+        }
       }
     });
     for (const page of active.pages) {
@@ -289,7 +328,7 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
       if (canvas) resize.observe(canvas);
     }
     return () => resize.disconnect();
-  }, [active, drawPage]);
+  }, [active?.id, activePageKey, drawPage]);
 
   const pointerPoint = (event: ReactPointerEvent<HTMLCanvasElement>): Point => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -302,7 +341,6 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
     const point = pointerPoint(event);
     const stroke: Stroke = { points: [point], color: tool === "eraser" ? "#ffffff" : penColor, width: tool === "eraser" ? 26 : penWidth, erase: tool === "eraser" };
     activeStroke.current = { journalId, pageId: page.id, stroke };
-    setLastInkPage(page.id);
     const ctx = event.currentTarget.getContext("2d"), rect = event.currentTarget.getBoundingClientRect();
     if (ctx) {
       ctx.globalCompositeOperation = stroke.erase ? "destination-out" : "source-over";
@@ -316,26 +354,43 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
     if (!current) return;
     event.preventDefault();
     const { stroke } = current, ctx = event.currentTarget.getContext("2d"), rect = event.currentTarget.getBoundingClientRect();
-    const samples = event.nativeEvent.getCoalescedEvents?.() || [event.nativeEvent];
+    const coalesced = event.nativeEvent.getCoalescedEvents?.();
+    const samples = coalesced?.length ? coalesced : [event.nativeEvent];
+    const previous = stroke.points.at(-1)!;
+    const nextPoints: Point[] = [];
+    let pressureTotal = previous[2] ?? 0.5;
     for (const sample of samples) {
       const next: Point = [(sample.clientX - rect.left) / rect.width, (sample.clientY - rect.top) / rect.height, sample.pointerType === "pen" ? sample.pressure : 0.5];
-      const previous = stroke.points[stroke.points.length - 1];
       stroke.points.push(next);
-      if (ctx) {
-        ctx.globalCompositeOperation = stroke.erase ? "destination-out" : "source-over";
-        ctx.beginPath(); ctx.strokeStyle = stroke.color; ctx.lineCap = "round"; ctx.lineJoin = "round";
-        ctx.lineWidth = Math.max(1, stroke.width * (0.5 + ((previous[2] || 0.5) + (next[2] || 0.5)) / 2 * 1.15));
-        ctx.moveTo(previous[0] * rect.width, previous[1] * rect.height); ctx.lineTo(next[0] * rect.width, next[1] * rect.height); ctx.stroke();
-        ctx.globalCompositeOperation = "source-over";
+      pressureTotal += next[2] ?? 0.5;
+      nextPoints.push(next);
+    }
+    if (ctx && nextPoints.length) {
+      ctx.globalCompositeOperation = stroke.erase ? "destination-out" : "source-over";
+      ctx.beginPath(); ctx.strokeStyle = stroke.color; ctx.lineCap = "round"; ctx.lineJoin = "round";
+      ctx.lineWidth = Math.max(1, stroke.width * (0.5 + (pressureTotal / (nextPoints.length + 1)) * 1.15));
+      ctx.moveTo(previous[0] * rect.width, previous[1] * rect.height);
+      let from = previous;
+      for (const next of nextPoints) {
+        ctx.quadraticCurveTo(from[0] * rect.width, from[1] * rect.height, ((from[0] + next[0]) / 2) * rect.width, ((from[1] + next[1]) / 2) * rect.height);
+        from = next;
       }
+      const last = nextPoints[nextPoints.length - 1];
+      ctx.lineTo(last[0] * rect.width, last[1] * rect.height);
+      ctx.stroke();
+      ctx.globalCompositeOperation = "source-over";
     }
   };
   const finishStroke = () => {
     const finished = activeStroke.current;
     if (!finished) return;
     activeStroke.current = null;
+    setLastInkPage(finished.pageId);
+    const currentPage = journalsRef.current.find(journal => journal.id === finished.journalId)?.pages.find(page => page.id === finished.pageId);
+    const nextStrokes = [...(currentPage?.strokes || []), finished.stroke];
+    renderedStrokeSets.current.set(finished.pageId, nextStrokes);
     setJournals(old => old.map(journal => journal.id === finished.journalId ? {
-      ...journal, pages: journal.pages.map(page => page.id === finished.pageId ? { ...page, strokes: [...page.strokes, finished.stroke] } : page), updated_at: new Date().toISOString(),
+      ...journal, pages: journal.pages.map(page => page.id === finished.pageId ? { ...page, strokes: nextStrokes } : page), updated_at: new Date().toISOString(),
     } : journal));
   };
 
@@ -351,7 +406,7 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
     const currentPage = isFullscreen ? active.pages[bookPageIndex] || active.pages.at(-1)! : active.pages.at(-1)!;
     const canvasHeight = canvasRefs.current.get(currentPage.id)?.clientHeight || 920;
     const nextLine = currentPage.todos.reduce((max, todo) => Math.max(max, todo.line), -1) + 1;
-    const page = nextLine < Math.floor((canvasHeight - 86) / 40) ? currentPage : makePage();
+    const page = nextLine < Math.floor((canvasHeight - JOURNAL_TODO_ROW_CENTER - 20) / JOURNAL_LINE_STEP) ? currentPage : makePage();
     const line = page === currentPage ? nextLine : 0;
     const todo: JournalTodo = { id: crypto.randomUUID(), line, checked: false };
     if (page === currentPage) updatePage(active.id, page.id, { todos: [...page.todos, todo] });
@@ -382,12 +437,17 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
 
   const toggleFullscreen = async () => {
     setUiMessage("");
+    if (isFullscreen) {
+      setIsFullscreen(false);
+      if (document.fullscreenElement === rootRef.current) await document.exitFullscreen().catch(() => undefined);
+      return;
+    }
+    setSidebarOpen(false);
+    setIsFullscreen(true);
     try {
-      if (document.fullscreenElement === rootRef.current) await document.exitFullscreen();
-      else if (rootRef.current?.requestFullscreen) await rootRef.current.requestFullscreen({ navigationUI: "hide" });
-      else setUiMessage("This browser does not support hiding its browser controls. The journal still fills the app screen.");
+      if (rootRef.current?.requestFullscreen) await rootRef.current.requestFullscreen({ navigationUI: "hide" });
     } catch {
-      setUiMessage("This browser blocked full-screen mode. The journal remains open and your writing is safe.");
+      setUiMessage("The journal is in full-screen writing mode. Use Exit full screen to return.");
     }
   };
 
@@ -395,14 +455,18 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
     const updateFullscreen = () => setIsFullscreen(document.fullscreenElement === rootRef.current);
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      if (isFullscreen) {
+        setIsFullscreen(false);
+        if (document.fullscreenElement === rootRef.current) void document.exitFullscreen();
+        return;
+      }
       if (sidebarOpen) { setSidebarOpen(false); return; }
-      if (document.fullscreenElement === rootRef.current) { void document.exitFullscreen(); return; }
       void saveBeforeClose();
     };
     document.addEventListener("fullscreenchange", updateFullscreen);
     document.addEventListener("keydown", onKeyDown);
     return () => { document.removeEventListener("fullscreenchange", updateFullscreen); document.removeEventListener("keydown", onKeyDown); };
-  }, [sidebarOpen]);
+  }, [sidebarOpen, isFullscreen]);
 
   const visiblePages = active ? (isFullscreen
     ? [
@@ -421,6 +485,7 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
         <button className="journal-close" onClick={() => void saveBeforeClose()} disabled={saveState === "saving"}>Done <span>✓</span></button>
       </div>
     </header>
+    {isFullscreen && <><span className="journal-focus-save" role="status">{saveState === "saving" ? "Saving…" : saveState === "error" ? "Save needs attention" : "Saved"}</span><button className="journal-focus-exit" onClick={toggleFullscreen} aria-label="Exit full screen">⛶ <span>Exit</span></button></>}
     {saveState === "error" && <div className="journal-save-error" role="alert"><span>Couldn’t save your changes. They are still on this screen.</span><button onClick={() => setRetrySave(value => value + 1)}>Retry save</button><small>{saveError}</small></div>}
     {uiMessage && <div className="journal-notice" role="status">{uiMessage}<button onClick={() => setUiMessage("")} aria-label="Dismiss message">×</button></div>}
     <div className="journal-frame">
@@ -466,8 +531,8 @@ export default function DiaryNotes({ userId, onClose }: { userId?: string; onClo
           <div className={`journal-pages${isFullscreen ? " journal-book-stage" : ""}`}>{visiblePages.map(page => { const index = active.pages.findIndex(item => item.id === page.id); const isTurningPage = isFullscreen && page.id === active.pages[bookPageIndex]?.id; return <section className={`journal-page${isFullscreen ? " journal-book-page" : ""}${isFullscreen && !isTurningPage ? " journal-book-under-page" : ""}${isTurningPage && pageFlip ? ` flip-${pageFlip}` : ""}`} id={`journal-page-${page.id}`} key={page.id}>
             <div className="journal-page-label"><span>PAGE {String(index + 1).padStart(2, "0")}</span><span>{page.todos.length ? `${page.todos.filter(todo => todo.checked).length}/${page.todos.length} done` : ""}</span></div>
             <div className="journal-canvas-wrap">
-              <canvas ref={element => { if (element) { canvasRefs.current.set(page.id, element); drawPage(page, element); } else canvasRefs.current.delete(page.id); }} className="journal-canvas" onPointerDown={event => startStroke(active.id, page, event)} onPointerMove={moveStroke} onPointerUp={finishStroke} onPointerCancel={finishStroke}/>
-              {page.todos.map(todo => <button key={todo.id} id={`journal-todo-${todo.id}`} type="button" className={`journal-todo-checkbox${todo.checked ? " checked" : ""}`} style={{ top: `calc(58px + ${todo.line * 40}px)` }} onClick={() => toggleTodo(active.id, page.id, todo.id)} aria-label={`${todo.checked ? "Uncheck" : "Check off"} to-do line ${todo.line + 1}`} aria-pressed={todo.checked}>{todo.checked ? "✓" : ""}</button>)}
+            <canvas ref={canvasRefFor(page.id)} className="journal-canvas" onPointerDown={event => startStroke(active.id, page, event)} onPointerMove={moveStroke} onPointerUp={finishStroke} onPointerCancel={finishStroke}/>
+              {page.todos.map(todo => <button key={todo.id} id={`journal-todo-${todo.id}`} type="button" className={`journal-todo-checkbox${todo.checked ? " checked" : ""}`} style={{ top: `calc(${JOURNAL_TODO_ROW_CENTER}px + ${todo.line * JOURNAL_LINE_STEP}px)` }} onClick={() => toggleTodo(active.id, page.id, todo.id)} aria-label={`${todo.checked ? "Uncheck" : "Check off"} to-do line ${todo.line + 1}`} aria-pressed={todo.checked}>{todo.checked ? "✓" : ""}</button>)}
             </div>
             <textarea className="journal-page-typing" value={page.typed_text} disabled={activeIsLocked} onChange={event => updatePage(active.id, page.id, { typed_text: event.target.value })} placeholder="Type notes on this page…" aria-label={`Typed notes for page ${index + 1}`}/>
             {page.handwriting_text && <details className="journal-recognized"><summary>Previously recognized text · editable</summary><textarea value={page.handwriting_text} onChange={event => updatePage(active.id, page.id, { handwriting_text: event.target.value })} aria-label={`Previously recognized text for page ${index + 1}`}/></details>}
