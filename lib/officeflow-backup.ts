@@ -2,7 +2,7 @@ import { mergeStarterTaskTypes, mergeMatterTypeNames, normalizeTaskActYearFields
 import { normalizeCompOffEntries } from "./comp-off.ts";
 import { mergePresetHolidays, inferHolidayPresetVersion, HOLIDAY_PRESET_VERSION } from "./officeflow-holidays.ts";
 
-export const OFFICEFLOW_BACKUP_SCHEMA_VERSION = 2.8;
+export const OFFICEFLOW_BACKUP_SCHEMA_VERSION = 2.9;
 const MAX_SUPPORTED_BACKUP_SCHEMA_VERSION = OFFICEFLOW_BACKUP_SCHEMA_VERSION;
 
 const TASK_STATUSES = new Set([
@@ -67,6 +67,7 @@ export function isValidOfficeFlowBackup(value: unknown): boolean {
 
   // Missing fields are migrated for old backups; explicit null/invalid values are rejected.
   if ("juniorDirectory" in value && (!isRecord(value.juniorDirectory) || Object.values(value.juniorDirectory).some(name=>typeof name!=="string"))) return false;
+  if ("workMemberEmails" in value && (!isRecord(value.workMemberEmails) || Object.values(value.workMemberEmails).some(email=>typeof email!=="string"))) return false;
   if ("clientDirectory" in value && (!Array.isArray(value.clientDirectory) || !value.clientDirectory.every((client:any)=>isRecord(client)&&typeof client.name==="string"&&optionalString(client,"pan")&&optionalString(client,"entityType")&&optionalString(client,"groupId")&&optionalString(client,"tan")&&optionalString(client,"gstin")&&(!("monthlyRetainer" in client)||(Number.isFinite(client.monthlyRetainer)&&client.monthlyRetainer>=0))&&(!("gstRate" in client)||(Number.isFinite(client.gstRate)&&client.gstRate>=0&&client.gstRate<=100))&&(!("gstTreatment" in client)||["unconfigured","cgst_sgst","igst","no_gst"].includes(client.gstTreatment))))) return false;
   if (!optionalArray(value,"clientGroups",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.name==="string"&&Array.isArray(item.clientNames)&&item.clientNames.every((name:any)=>typeof name==="string"))) return false;
   if (!optionalArray(value,"matterRounds",(item:any)=>isRecord(item)&&typeof item.id==="string"&&typeof item.matterId==="string"&&typeof item.roundType==="string"&&Number.isInteger(item.sequenceNumber)&&item.sequenceNumber>0&&REPLY_STATUSES.has(item.replyStatus)&&(!("hearingOutcome" in item)||HEARING_OUTCOMES.has(item.hearingOutcome))&&optionalISODate(item,"noticeDate")&&optionalISODate(item,"dueDate")&&optionalISODate(item,"nextHearingDate")&&optionalISODateTime(item,"hearingAt")&&Array.isArray(item.attachments)&&item.attachments.every((a:any)=>isRecord(a)&&typeof a.name==="string"&&optionalString(a,"dataUrl")&&optionalString(a,"url")))) return false;
@@ -113,6 +114,7 @@ export function migrateOfficeFlowBackup(value: unknown): Record<string, any> {
     schemaVersion:OFFICEFLOW_BACKUP_SCHEMA_VERSION,
     tasks,
     juniorDirectory:data.juniorDirectory||{},
+    workMemberEmails:data.workMemberEmails||{},
     clientDirectory:Array.isArray(data.clientDirectory)?data.clientDirectory:[],
     clientGroups:Array.isArray(data.clientGroups)?data.clientGroups:[],
     matterRounds:Array.isArray(data.matterRounds)?data.matterRounds:[],

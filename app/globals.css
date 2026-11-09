@@ -1470,7 +1470,7 @@ input,select,textarea{font-size:16px}
 .task-view-switch{display:inline-flex;align-items:center;gap:2px;padding:3px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
 .task-view-switch button{border:0;border-radius:6px;padding:7px 12px;background:transparent;color:var(--muted);font-size:10px;font-weight:700}
 .task-view-switch button.selected{background:var(--purple-soft);color:var(--purple)}
-.task-checklist-field{min-width:0}
+.task-checklist-field{grid-column:1 / -1;min-width:0}
 .task-checklist-field>.field-hint{margin:5px 0 9px;color:var(--muted);font-size:10px;line-height:1.45}
 .task-checklist-editor{display:grid;gap:7px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
 .task-checklist-empty{padding:8px 4px;color:var(--muted);font-size:11px}
@@ -1501,7 +1501,7 @@ input,select,textarea{font-size:16px}
 .app .sidebar .sidebar-nav-group .nav-item.active{background:#176653!important;color:#fff!important;box-shadow:inset 3px 0 #4adbb1}
 .app .sidebar .sidebar-nav-group .nav-item.active .nav-icon{color:#8df0c7!important}
 .app .sidebar .sidebar-nav-group>summary:focus-visible,.app .sidebar .sidebar-nav-group .nav-item:focus-visible{outline:2px solid #7be9c0;outline-offset:-2px}
-.task-checklist-row textarea.task-checklist-item-input{display:block;min-width:0;width:100%;max-height:140px;min-height:40px;resize:vertical;overflow-y:auto;overflow-wrap:anywhere;white-space:pre-wrap;line-height:1.35;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);font:inherit;font-size:11px}
+.task-checklist-row textarea.task-checklist-item-input{display:block;min-width:0;width:100%;max-height:none;min-height:40px;resize:none;overflow-y:hidden;overflow-wrap:anywhere;white-space:pre-wrap;line-height:1.35;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);font:inherit;font-size:11px}
 @media(max-width:560px){.task-checklist-row textarea.task-checklist-item-input{padding:8px 7px}}
 /* Journal action controls are separated from the title grid to prevent overlap. */
 .journal-entry-actions{width:min(940px,calc(100% - 32px));margin:0 auto 7px;display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:7px}
@@ -1517,4 +1517,4 @@ input,select,textarea{font-size:16px}
 .journal-fullscreen.is-fullscreen .journal-book-controls{z-index:30;bottom:calc(28px + env(safe-area-inset-bottom));touch-action:manipulation}
 .journal-fullscreen.is-fullscreen .journal-book-controls button{min-height:44px;touch-action:manipulation}
 @media(max-width:760px){.journal-entry-actions{width:calc(100% - 16px);justify-content:stretch;gap:5px}.journal-entry-actions button{flex:1 1 auto;min-height:42px;padding:8px 7px;font-size:10px}.journal-fullscreen.is-fullscreen .journal-book-controls{bottom:calc(28px + env(safe-area-inset-bottom));gap:6px}.journal-fullscreen.is-fullscreen .journal-book-controls button{min-height:44px;padding:8px 10px}}
-.member-actions{display:flex;align-items:center;gap:6px;flex:none}.member-actions .secondary-button{padding:6px 9px;font-size:12px;white-space:nowrap}.directory-row{flex-wrap:wrap}@media(max-width:600px){.member-actions{width:100%;justify-content:flex-end}.member-actions .secondary-button{min-height:38px}}
+.member-actions{display:flex;align-items:center;gap:6px;flex:none;flex-wrap:wrap}.member-actions .secondary-button{padding:6px 9px;font-size:12px;white-space:nowrap}.directory-row{flex-wrap:wrap}@media(max-width:600px){.member-actions{width:100%;justify-content:flex-end}.member-actions .secondary-button{min-height:38px}}
