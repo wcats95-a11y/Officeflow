@@ -2,7 +2,7 @@ import { mergeStarterTaskTypes, mergeMatterTypeNames, normalizeTaskActYearFields
 import { normalizeCompOffEntries } from "./comp-off.ts";
 import { mergePresetHolidays, inferHolidayPresetVersion, HOLIDAY_PRESET_VERSION } from "./officeflow-holidays.ts";
 
-export const OFFICEFLOW_BACKUP_SCHEMA_VERSION = 2.9;
+export const OFFICEFLOW_BACKUP_SCHEMA_VERSION = 2.8;
 const MAX_SUPPORTED_BACKUP_SCHEMA_VERSION = OFFICEFLOW_BACKUP_SCHEMA_VERSION;
 
 const TASK_STATUSES = new Set([
