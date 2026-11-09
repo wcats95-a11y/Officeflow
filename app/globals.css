@@ -1519,3 +1519,18 @@ input,select,textarea{font-size:16px}
 @media(max-width:760px){.journal-entry-actions{width:calc(100% - 16px);justify-content:stretch;gap:5px}.journal-entry-actions button{flex:1 1 auto;min-height:42px;padding:8px 7px;font-size:10px}.journal-fullscreen.is-fullscreen .journal-book-controls{bottom:calc(28px + env(safe-area-inset-bottom));gap:6px}.journal-fullscreen.is-fullscreen .journal-book-controls button{min-height:44px;padding:8px 10px}}
 .member-actions{display:flex;align-items:center;gap:6px;flex:none;flex-wrap:wrap}.member-actions .secondary-button{padding:6px 9px;font-size:12px;white-space:nowrap}.directory-row{flex-wrap:wrap}@media(max-width:600px){.member-actions{width:100%;justify-content:flex-end}.member-actions .secondary-button{min-height:38px}}
 .junior-directory-card{display:none}
+
+/* OfficeFlow 2.1 UI refinement: compact directories, task hierarchy and denser layouts */
+.client-name-row{display:flex;width:100%;align-items:center;justify-content:space-between;text-align:left;padding:13px 15px;margin:5px 0;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
+.client-name-row:hover,.client-name-row.active{background:var(--surface-raised,var(--bg));border-color:var(--accent);transform:translateY(-1px)}
+.client-name-row span:first-child{display:grid;gap:3px;min-width:0}.client-name-row b{font-size:14px;font-weight:700}.client-name-row small{font-size:11px;color:var(--muted)}.client-row-arrow{font-size:22px;color:var(--muted)}
+.selected-client-overview{margin-top:14px;padding:18px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.selected-client-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.selected-client-heading h3{margin:0 0 5px}.selected-client-heading p{margin:0;color:var(--muted);font-size:12px}
+.selected-client-stats{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.selected-client-stats span{padding:9px 12px;border:1px solid var(--line);border-radius:9px;color:var(--muted);font-size:12px}.selected-client-stats b{color:var(--ink);font-size:15px;margin-right:4px}
+.selected-client-actions{display:flex;flex-wrap:wrap;gap:8px}
+.entity-grid,.directory-layout{gap:14px!important}.entity-card{padding:18px!important}.directory-row{padding:10px 12px!important}
+.settings-layout .entity-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+.settings-layout .entity-card{min-width:0}
+.task-table-head{grid-template-columns:minmax(260px,2.2fr) minmax(90px,.8fr) minmax(140px,1.1fr) minmax(100px,.8fr) minmax(150px,1fr) auto}
+.required-indicator{color:#d04444;font-weight:800;margin-left:3px}
+@media(max-width:900px){.settings-layout .entity-grid{grid-template-columns:1fr}.task-table-head{grid-template-columns:minmax(190px,2fr) minmax(75px,.7fr) minmax(110px,1fr) minmax(90px,.8fr) minmax(115px,1fr) auto}}
