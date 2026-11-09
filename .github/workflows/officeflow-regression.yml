@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/officeflow-2-modern-ui
+      - feat/officeflow-audit-combined
   pull_request:
     branches:
       - feat/officeflow-2-modern-ui
