@@ -108,9 +108,9 @@ export default function Home() {
  const [workspaceDisplayName,setWorkspaceDisplayName] = useState("");
  const currentDisplayName=profileDisplayName||workspaceDisplayName||session?.user?.email?.split("@")[0]||"Manager";
  const indiaGreeting=()=>{const hour=Number(new Intl.DateTimeFormat("en-IN",{timeZone:"Asia/Kolkata",hour:"2-digit",hourCycle:"h23"}).format(new Date()));return hour<12?"Good morning":hour<17?"Good afternoon":"Good evening"};
- const [workspaceMembers,setWorkspaceMembers] = useState<{user_id:string;
-  const [workspaceInvitations,setWorkspaceInvitations] = useState<{id:string;email:string;display_name:string;phone_number?:string|null;role:"manager"|"junior";status:string;created_at:string;expires_at:string;last_sent_at?:string|null}[]>([]);email:string;display_name:string;phone_number?:string|null;role:"manager"|"junior";created_at?:string}[]>([]);
- const [newMember,setNewMember] = useState({email:"",display_name:"",phone_number:"",role:"junior" as "manager"|"junior"});
+ const [workspaceMembers,setWorkspaceMembers] = useState<{user_id:string;email:string;display_name:string;phone_number?:string|null;role:"manager"|"junior";created_at?:string}[]>([]);
+  const [workspaceInvitations,setWorkspaceInvitations] = useState<{id:string;email:string;display_name:string;phone_number?:string|null;role:"manager"|"junior";status:string;created_at:string;expires_at:string;last_sent_at?:string|null}[]>([]);
+  const [newMember,setNewMember] = useState({email:"",display_name:"",phone_number:"",role:"junior" as "manager"|"junior"});
  const [memberMessage,setMemberMessage] = useState("");
  const [memberBusy,setMemberBusy] = useState(false);
  const sessionUserId=useRef<string|null>(null);
