@@ -1577,3 +1577,13 @@ label:has(input:required),label:has(select:required){color:var(--ink)}
 .app .task-row{min-height:68px}
 @media(max-width:900px){.settings-layout .directory-layout{grid-template-columns:1fr}}
 @media(max-width:600px){.client-directory-tools{align-items:stretch;flex-direction:column}.client-directory-tools input{width:100%}.settings-layout .directory-row{align-items:flex-start}.settings-layout .member-actions{width:100%;justify-content:flex-end}}
+
+/* Client directory: list-first, compact detail panel */
+.directory-layout:has(.client-name-row){grid-template-columns:minmax(230px,.82fr) minmax(0,1.5fr);align-items:stretch}
+.directory-layout:has(.client-name-row)>.entity-card:nth-child(1){grid-column:1;grid-row:1}
+.directory-layout:has(.client-name-row)>.entity-card:nth-child(2){grid-column:1;grid-row:2}
+.directory-layout:has(.client-name-row)>.entity-card:nth-child(3){grid-column:2;grid-row:1 / span 2;min-height:100%}
+.directory-layout:has(.client-name-row)>.entity-card:nth-child(3)>p{margin:5px 0 10px}
+.directory-layout:has(.client-name-row) .client-directory-tools{margin-top:8px}
+.directory-layout:has(.client-name-row) .client-name-row{margin:3px 0;min-height:42px}
+@media(max-width:900px){.directory-layout:has(.client-name-row){grid-template-columns:1fr}.directory-layout:has(.client-name-row)>.entity-card:nth-child(1),.directory-layout:has(.client-name-row)>.entity-card:nth-child(2),.directory-layout:has(.client-name-row)>.entity-card:nth-child(3){grid-column:1;grid-row:auto}}
