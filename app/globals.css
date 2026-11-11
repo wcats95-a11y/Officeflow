@@ -1540,3 +1540,50 @@ input,select,textarea{font-size:16px}
 .task-name-wrap>small{display:block;margin-top:3px}
 label:has(input:required)::before,label:has(select:required)::before{content:"*";color:#d04444;font-weight:900;margin-right:4px}
 label:has(input:required),label:has(select:required){color:var(--ink)}
+
+
+/* OfficeFlow 2.1 final usability pass */
+.junior-directory-card{display:block!important}
+.settings-layout .directory-layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.settings-layout .entity-card{min-width:0;padding:16px!important;border-radius:15px}
+.settings-layout .entity-card>p{margin:5px 0 12px;line-height:1.45;font-size:12px}
+.settings-layout .directory-row{display:flex;align-items:center;gap:10px;padding:10px 0!important;border-bottom:1px solid var(--line)}
+.settings-layout .directory-row>div:first-child{flex:1;min-width:130px}
+.settings-layout .directory-row small{display:block;line-height:1.4}
+.settings-layout .member-actions{display:flex;gap:6px;flex-wrap:wrap}
+.settings-layout .member-actions button{min-height:34px}
+.client-directory-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 12px}
+.client-directory-tools input{width:min(100%,340px);min-height:40px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--ink)}
+.client-directory-tools span{font-size:11px;color:var(--muted);white-space:nowrap}
+.client-name-row{min-height:46px;padding:10px 13px;margin:4px 0;border-radius:10px}
+.client-name-row>b{font-size:14px;font-weight:700}
+.client-row-arrow{font-size:18px}
+.selected-client-overview{padding:15px;margin-top:10px}
+.selected-client-stats{gap:7px;margin:12px 0}
+.selected-client-stats span{padding:7px 10px}
+.required-fields-note{margin:7px 0 0;color:var(--muted);font-size:11px}
+.required-fields-note span{color:#dc4545;font-weight:900;font-size:15px;margin-right:3px}
+.task-form-step label:has(input:required)::before,.task-form-step label:has(select:required)::before{content:"*";display:inline-block;color:#dc4545;font-weight:900;margin-right:5px}
+.task-form-step label:has(input:required),.task-form-step label:has(select:required){font-weight:650}
+.task-form-step input:required,.task-form-step select:required{border-color:color-mix(in srgb,#dc4545 36%,var(--line))}
+.task-form-step input:required:focus,.task-form-step select:required:focus{outline:2px solid color-mix(in srgb,#dc4545 24%,transparent);outline-offset:1px}
+.app .modal{max-width:min(920px,calc(100vw - 28px));max-height:min(92vh,1000px);overflow:auto}
+.app .modal-header{position:sticky;top:-27px;z-index:5;padding:8px 0 12px;background:var(--surface)}
+.app .dashboard-grid{gap:14px}
+.app .dashboard-card,.app .entity-card{border-radius:15px}
+.app .entity-card{padding:17px}
+.app .entity-card>p{line-height:1.5}
+.app .task-table-head{min-height:48px}
+.app .task-row{min-height:68px}
+@media(max-width:900px){.settings-layout .directory-layout{grid-template-columns:1fr}}
+@media(max-width:600px){.client-directory-tools{align-items:stretch;flex-direction:column}.client-directory-tools input{width:100%}.settings-layout .directory-row{align-items:flex-start}.settings-layout .member-actions{width:100%;justify-content:flex-end}}
+
+/* Client directory: list-first, compact detail panel */
+.directory-layout:has(.client-name-row){grid-template-columns:minmax(230px,.82fr) minmax(0,1.5fr);align-items:stretch}
+.directory-layout:has(.client-name-row)>.entity-card:nth-child(1){grid-column:1;grid-row:1}
+.directory-layout:has(.client-name-row)>.entity-card:nth-child(2){grid-column:1;grid-row:2}
+.directory-layout:has(.client-name-row)>.entity-card:nth-child(3){grid-column:2;grid-row:1 / span 2;min-height:100%}
+.directory-layout:has(.client-name-row)>.entity-card:nth-child(3)>p{margin:5px 0 10px}
+.directory-layout:has(.client-name-row) .client-directory-tools{margin-top:8px}
+.directory-layout:has(.client-name-row) .client-name-row{margin:3px 0;min-height:42px}
+@media(max-width:900px){.directory-layout:has(.client-name-row){grid-template-columns:1fr}.directory-layout:has(.client-name-row)>.entity-card:nth-child(1),.directory-layout:has(.client-name-row)>.entity-card:nth-child(2),.directory-layout:has(.client-name-row)>.entity-card:nth-child(3){grid-column:1;grid-row:auto}}
